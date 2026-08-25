@@ -137,8 +137,8 @@ end
 -- 1. 框架专属防御
 if site_framework == "v2board" then
     -- V2Board 专属放行逻辑（API 订阅与服务端节点通信免死金牌）
-    -- 兼容默认订阅路径，以及用户自定义的安全订阅路径
-    if string.find(req_uri, "/api/v1/client/subscribe") or string.find(req_uri, "/api/v1/server/") or string.find(req_uri, "/ktelie/verxcen/cliuekub/siktdlext") then
+    -- 兼容默认订阅路径，以及用户自定义的安全订阅路径，以及 Telegram 官方 Bot Webhook
+    if string.find(req_uri, "/api/v1/client/subscribe") or string.find(req_uri, "/api/v1/server/") or string.find(req_uri, "/ktelie/verxcen/cliuekub/siktdlext") or string.find(req_uri, "/telegram/webhook") then
         return
     end
 
