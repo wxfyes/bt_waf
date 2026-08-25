@@ -112,7 +112,17 @@ class btwaf_v2board_main:
             err_str = str(e)
             if "RemoteDisconnected" in err_str or "Connection aborted" in err_str:
                 return public.returnMsg(True, "【本地内核诊断】防护完全正常生效！WAF 执行了 DROP (444) 直接切断了恶意连接。")
-            return public.returnMsg(False, f"本地请求失败: {err_str}")
+            
+            # 兼容破解版宝塔或不监听 127.0.0.1 的环境，回退到域名直连
+            try:
+                url_direct = f"http://{site_name}/?test_waf=1"
+                resp = requests.get(url_direct, timeout=5, verify=False)
+                code = resp.status_code
+            except Exception as e2:
+                err_str2 = str(e2)
+                if "RemoteDisconnected" in err_str2 or "Connection aborted" in err_str2:
+                    return public.returnMsg(True, "【本地内核诊断】防护完全正常生效！WAF 执行了 DROP (444) 直接切断了恶意连接。")
+                return public.returnMsg(False, f"本地诊断请求失败: {err_str2}")
             
         if code == 406 or code == 403 or code == 444:
             return public.returnMsg(True, f"【本地内核诊断】防护完全正常生效！返回状态码: {code}")
