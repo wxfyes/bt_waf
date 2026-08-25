@@ -1,0 +1,18 @@
+# 常见 SQL 注入
+\b(select|update|delete|insert|drop|alter)\b\s+.*\b(from|into|where|set)\b
+\b(union|select)\b\s+.*\b(from|into)\b
+\b(exec|execute|sp_executesql)\b
+\b(and|or)\b\s+.*\b(1=1|1=2)\b
+
+# 常见 RCE (动态函数)
+\b(eval|assert|system|exec|shell_exec|passthru|popen|proc_open)\b\s*\(
+\b(file_get_contents|file_put_contents)\b\s*\(
+
+# 常见 XSS
+\<\s*script\b
+\b(alert|prompt|confirm)\b\s*\(
+\bon(error|load|click|mouseover|mouseout|keydown|keyup)\b\s*=
+
+# 路径穿越
+\.\.\/
+\.\.\\

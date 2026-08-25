@@ -1,0 +1,17 @@
+# 黑名单 User-Agent 规则库
+# 拦截常见扫描器、空间测绘引擎、恶意爬虫及 GFW 主动探测特征
+
+# 常见空间测绘引擎 (Shodan, Censys, Fofa, ZoomEye, IPinfo)
+(shodan|censys|fofa|zoomeye|ipinfo|onyphe|binaryedge|leakix|masscan|zgrab|nmap|nuclei|projectdiscovery)
+
+# 恶意爬虫与扫描工具
+(sqlmap|awvs|acunetix|nessus|openvas|nikto|w3af|dirbuster|gobuster|xray|python-requests|go-http-client|java/|curl/|wget/|ruby|postmanruntime|urllib)
+
+# 常见搜索引擎爬虫 (如果是机场面板，通常不需要被蜘蛛抓取，防 GFW 爬取)
+# 可选：如果希望百度/谷歌收录，可以注释掉下面这行
+(spider|bot|slurp|crawler|fetch|scrapy|curl|wget)
+
+# 特殊空特征或伪造特征 (常用于主动探测)
+^(Mozilla/5\.0)$
+^(Mozilla/4\.0)$
+^(Mozilla/5\.0\s*\(compatible;\s*MSIE\s*9\.0;\s*Windows\s*NT\s*6\.1\))$

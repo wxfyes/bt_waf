@@ -1,0 +1,12 @@
+# Laravel / V2Board 专属高危路径与敏感文件拦截规则
+# 严格防止访问环境配置文件
+\/\.env(\..*)?$
+\/\.git\/
+\/storage\/logs\/
+\/database\/
+\/composer\.(json|lock)$
+\/artisan$
+
+# V2Board 特有高危路由拦截 (未授权访问防爆破)
+# 假设某段路由需要特别防护
+\/api\/v1\/admin\/login\?

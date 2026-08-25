@@ -1,0 +1,7 @@
+# POST 防御规则库
+(select\s+.*\s+from|insert\s+into|update\s+.*\s+set|delete\s+from|drop\s+table|truncate\s+table|union\s+all\s+select|union\s+select|information_schema|waitfor\s+delay)
+(<script.*?>.*?<\/script>|javascript:|onerror=|onload=|eval\(|alert\(|prompt\()
+(\.\.\/|\.\.\\)
+(etc\/passwd|windows\/win\.ini)
+(base64_decode|phpinfo|system\(|exec\(|passthru\(|shell_exec\()
+(xdebug_session_start)

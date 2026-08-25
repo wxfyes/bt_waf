@@ -1,0 +1,15 @@
+{
+  "name": "btwaf_v2board",
+  "title": "企业级防篡改与反制WAF",
+  "title_en": "Enterprise WAF",
+  "ps": "企业级安全防御与反制WAF，支持 Nginx 联动、IP 黑名单与 Telegram/Cloudflare 边缘网关",
+  "ps_en": "Enterprise WAF plugin for aaPanel",
+  "author": "Antigravity",
+  "version": "3.0.3",
+  "versions": "3.0.3",
+  "date": "2026-08-25",
+  "home": "https://github.com",
+  "type": "其它插件",
+  "display": 1,
+  "pid": 2
+}
