@@ -300,8 +300,11 @@
         <div class="btwaf-menu-item" onclick="btwaf_switchTab('cc')">
             <span class="btwaf-menu-icon">⚡</span>CC 防御
         </div>
-        <div class="btwaf-menu-item" onclick="btwaf_switchTab('logs')">
+        <div class="btwaf-menu-item" onclick="btwaf_switchTab('alerts')">
             <span class="btwaf-menu-icon">🚨</span>实时告警
+        </div>
+        <div class="btwaf-menu-item" onclick="btwaf_switchTab('logs')">
+            <span class="btwaf-menu-icon">📑</span>日志与审计
         </div>
         <div class="btwaf-menu-item" onclick="btwaf_switchTab('geoip')">
             <span class="btwaf-menu-icon">🌍</span>GeoIP 
@@ -439,17 +442,51 @@
             </div>
         </div>
 
-        <!-- 面板：实时告警 -->
-        <div id="btwaf_panel_logs" class="btwaf-panel">
+        <!-- 面板：实时告警 (高危威胁) -->
+        <div id="btwaf_panel_alerts" class="btwaf-panel">
             <div class="btwaf-card">
                 <div class="btwaf-card-header">
-                    实时安全告警 (拦截日志)
+                    🚨 实时核心威胁告警
                     <div>
-                        <button class="btwaf-btn" onclick="btwaf_loadLogs()">刷新日志</button>
-                        <button class="btwaf-btn btwaf-btn-danger" style="margin-left:10px;" onclick="btwaf_clearLogs()">清空日志</button>
+                        <button class="btwaf-btn" onclick="btwaf_loadAlerts()">刷新告警</button>
                     </div>
                 </div>
                 <div class="btwaf-card-body">
+                    <div style="max-height: 400px; overflow-y: auto; border: 1px solid var(--btwaf-border);">
+                        <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                            <thead style="position: sticky; top: 0; z-index: 1;">
+                                <tr style="background:#f0f2f5; text-align:left;">
+                                    <th style="padding:10px; border:1px solid var(--btwaf-border); border-top:none;">时间</th>
+                                    <th style="padding:10px; border:1px solid var(--btwaf-border); border-top:none;">IP地址</th>
+                                    <th style="padding:10px; border:1px solid var(--btwaf-border); border-top:none;">拦截规则</th>
+                                    <th style="padding:10px; border:1px solid var(--btwaf-border); border-top:none;">目标 URI</th>
+                                    <th style="padding:10px; border:1px solid var(--btwaf-border); border-top:none; width:60px;">动作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="btwaf_alerts_tbody">
+                                <tr><td colspan="5" style="padding:10px; text-align:center; color:#999;">加载中...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 面板：日志与审计 -->
+        <div id="btwaf_panel_logs" class="btwaf-panel">
+            <div class="btwaf-card">
+                <div class="btwaf-card-header">
+                    📑 底层防御日志与审计
+                    <div>
+                        <button class="btwaf-btn" onclick="btwaf_loadLogs()">刷新日志流</button>
+                    </div>
+                </div>
+                <div class="btwaf-card-body">
+                    <div class="btwaf-form-group" style="margin-bottom:15px; padding-bottom:15px; border-bottom:1px solid var(--btwaf-border);">
+                        <label style="color:var(--btwaf-danger);">一键清理日志</label>
+                        <span style="font-size:13px; color:#666; flex:1;">为防止误操作，清理当天拦截日志前请确认。安全事件日志不可恢复。</span>
+                        <button class="btwaf-btn btwaf-btn-danger" style="margin-top:0;" onclick="btwaf_clearLogs()">执行清理</button>
+                    </div>
                     <div class="btwaf-log-container" id="btwaf_log_viewer">加载中...</div>
                 </div>
             </div>
@@ -692,6 +729,7 @@
         });
         document.getElementById('btwaf_panel_' + tabId).classList.add('active');
 
+        if(tabId === 'alerts') btwaf_loadAlerts();
         if(tabId === 'logs') btwaf_loadLogs();
         if(tabId === 'dashboard') btwaf_loadDashboard();
         if(tabId === 'blacklist') btwaf_loadBlacklist();
@@ -881,13 +919,62 @@
         });
     }
 
+    function btwaf_loadAlerts() {
+        document.getElementById('btwaf_alerts_tbody').innerHTML = '<tr><td colspan="5" style="padding:10px; text-align:center; color:#999;">加载中...</td></tr>';
+        btwaf_api('get_logs', {}, function(res) {
+            if(res && res.status && res.msg && res.msg.indexOf('IP:') !== -1) {
+                var lines = res.msg.split('\n');
+                var html = '';
+                var count = 0;
+                for(var i = 0; i < lines.length; i++) {
+                    var line = lines[i].trim();
+                    if(!line) continue;
+                    // Parse log: [2026-08-26 09:26:47] IP: 172.105.22.205, URI: /api/..., UA: ..., Rule: Malicious, Payload: ..., Action: block
+                    var timeMatch = line.match(/^\[(.*?)\]/);
+                    var ipMatch = line.match(/IP: ([^,]+)/);
+                    var uriMatch = line.match(/URI: ([^,]+)/);
+                    var ruleMatch = line.match(/Rule: ([^,]+)/);
+                    var actionMatch = line.match(/Action: (.*)$/);
+                    
+                    if(timeMatch && ipMatch) {
+                        var action = actionMatch ? actionMatch[1] : 'block';
+                        var actionColor = action === 'tarpit' ? '#faad14' : '#f5222d';
+                        html += `
+                            <tr style="border-bottom: 1px solid var(--btwaf-border);">
+                                <td style="padding:10px;">${timeMatch[1]}</td>
+                                <td style="padding:10px; color:var(--btwaf-primary); font-weight:bold;">${ipMatch[1]}</td>
+                                <td style="padding:10px;">${ruleMatch ? ruleMatch[1] : 'Unknown'}</td>
+                                <td style="padding:10px; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${uriMatch ? uriMatch[1] : ''}">${uriMatch ? uriMatch[1] : ''}</td>
+                                <td style="padding:10px;"><span style="color:${actionColor}; border:1px solid ${actionColor}; padding:2px 6px; border-radius:4px; font-size:12px;">${action.toUpperCase()}</span></td>
+                            </tr>
+                        `;
+                        count++;
+                    }
+                }
+                if(count > 0) {
+                    document.getElementById('btwaf_alerts_tbody').innerHTML = html;
+                } else {
+                    document.getElementById('btwaf_alerts_tbody').innerHTML = '<tr><td colspan="5" style="padding:10px; text-align:center; color:#999;">暂无核心威胁告警</td></tr>';
+                }
+            } else {
+                document.getElementById('btwaf_alerts_tbody').innerHTML = '<tr><td colspan="5" style="padding:10px; text-align:center; color:#999;">暂无核心威胁告警</td></tr>';
+            }
+        });
+    }
+
     function btwaf_clearLogs() {
-        if(confirm("确定清空今日拦截日志？")) {
-            btwaf_api('clear_logs', {}, function(res) {
-                layer.msg(res.msg, {icon: 1});
-                btwaf_loadLogs();
-            });
-        }
+        layer.prompt({title: '安全确认：请输入大写 CLEAR 执行清理', formType: 0}, function(pass, index){
+            if(pass === 'CLEAR') {
+                layer.close(index);
+                btwaf_api('clear_logs', {}, function(res) {
+                    layer.msg(res.msg, {icon: 1});
+                    btwaf_loadLogs();
+                    btwaf_loadAlerts();
+                });
+            } else {
+                layer.msg('输入错误，已取消清理', {icon: 2});
+            }
+        });
     }
 
     function btwaf_genBaseline() {

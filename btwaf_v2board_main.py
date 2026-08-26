@@ -375,7 +375,7 @@ class btwaf_v2board_main:
             return public.returnMsg(False, f"修改失败: {str(e)}")
 
     def get_logs(self, args):
-        """获取当天的 WAF 拦截日志"""
+        """获取当天的 WAF 拦截日志 (倒序取最新 200 条)"""
         import datetime
         date_str = datetime.datetime.now().strftime("%Y-%m-%d")
         log_file = f"/www/wwwlogs/waf/intercept_{date_str}.log"
@@ -385,10 +385,27 @@ class btwaf_v2board_main:
             
         try:
             with open(log_file, 'r', encoding='utf-8') as f:
-                logs = f.read()
+                lines = f.readlines()
+                # 取最后 200 行，反转顺序，最新的在最前
+                recent_lines = lines[-200:]
+                recent_lines.reverse()
+                logs = ''.join(recent_lines)
             return public.returnMsg(True, logs)
         except Exception as e:
             return public.returnMsg(False, f"无法读取日志文件: {str(e)}")
+
+    def clear_logs(self, args):
+        """物理清理当日拦截日志"""
+        import datetime
+        date_str = datetime.datetime.now().strftime("%Y-%m-%d")
+        log_file = f"/www/wwwlogs/waf/intercept_{date_str}.log"
+        if os.path.exists(log_file):
+            try:
+                os.remove(log_file)
+                return public.returnMsg(True, "日志清理成功。")
+            except Exception as e:
+                return public.returnMsg(False, f"清理失败: {str(e)}")
+        return public.returnMsg(True, "无日志需要清理。")
 
     def get_nginx_error_log(self, args):
         site_name = getattr(args, 'siteName', '')
