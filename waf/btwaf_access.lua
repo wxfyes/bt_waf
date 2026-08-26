@@ -45,8 +45,9 @@ local client_ip = get_client_ip()
 -- 记录拦截日志 (自动按日切割)
 local function log_record(rule, payload, action)
     local date_str = ngx.today() -- 格式: YYYY-MM-DD
-    local log_str = string.format("[%s] IP: %s, URI: %s, Rule: %s, Payload: %s, Action: %s\n", 
-                                  ngx.localtime(), client_ip, req_uri, rule, payload, action)
+    local ua = ngx.var.http_user_agent or "null"
+    local log_str = string.format("[%s] IP: %s, URI: %s, UA: %s, Rule: %s, Payload: %s, Action: %s\n", 
+                                  ngx.localtime(), client_ip, req_uri, ua, rule, payload, action)
     
     -- 写入 Nginx 错误日志作为备份
     ngx.log(ngx.ERR, "[WAF-Intercept] ", log_str)
