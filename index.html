@@ -1,19 +1,22 @@
 <style>
     :root {
-        --btwaf-primary: #20a53a;
-        --btwaf-danger: #d9534f;
-        --btwaf-bg: #f5f7fa;
-        --btwaf-border: #e2e2e2;
+        --btwaf-primary: #108ee9;
+        --btwaf-danger: #f5222d;
+        --btwaf-success: #52c41a;
+        --btwaf-warning: #faad14;
+        --btwaf-bg: #f0f2f5;
+        --btwaf-border: #e8e8e8;
         --btwaf-text: #333;
-        --btwaf-text-muted: #777;
+        --btwaf-text-muted: #999;
+        --btwaf-sidebar-bg: #ffffff;
     }
 
     .btwaf-wrap {
         display: flex;
-        height: 600px;
+        height: 700px;
         background-color: var(--btwaf-bg);
         color: var(--btwaf-text);
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         border-radius: 4px;
         overflow: hidden;
     }
@@ -22,18 +25,26 @@
         box-sizing: border-box;
     }
 
-    /* 侧边栏 */
     .btwaf-sidebar {
-        width: 150px;
-        background-color: #fff;
+        width: 180px;
+        background-color: var(--btwaf-sidebar-bg);
         border-right: 1px solid var(--btwaf-border);
         display: flex;
         flex-direction: column;
-        padding-top: 20px;
+        overflow-y: auto;
+    }
+    
+    .btwaf-sidebar-header {
+        padding: 20px 15px 10px;
+        font-weight: bold;
+        color: #666;
+        font-size: 13px;
+        border-bottom: 1px solid var(--btwaf-border);
+        margin-bottom: 10px;
     }
 
     .btwaf-menu-item {
-        padding: 15px 20px;
+        padding: 12px 20px;
         cursor: pointer;
         display: flex;
         align-items: center;
@@ -44,22 +55,22 @@
     }
 
     .btwaf-menu-item:hover {
-        background-color: #f9f9f9;
+        color: var(--btwaf-primary);
     }
 
     .btwaf-menu-item.active {
         color: var(--btwaf-primary);
-        background-color: #f0f9f2;
+        background-color: #e6f7ff;
         border-left-color: var(--btwaf-primary);
-        font-weight: 500;
     }
 
     .btwaf-menu-icon {
-        margin-right: 10px;
-        font-size: 16px;
+        margin-right: 8px;
+        font-size: 14px;
+        width: 16px;
+        text-align: center;
     }
 
-    /* 主内容区 */
     .btwaf-main-content {
         flex: 1;
         display: flex;
@@ -68,73 +79,37 @@
         overflow-y: auto;
     }
 
-    /* 头部 */
     .btwaf-header {
-        padding: 20px 30px;
+        padding: 15px 25px;
         border-bottom: 1px solid var(--btwaf-border);
         display: flex;
         justify-content: space-between;
         align-items: center;
+        background-color: #fff;
     }
 
     .btwaf-header h1 {
         font-size: 18px;
         font-weight: 500;
+        margin: 0;
         display: flex;
         align-items: center;
-        margin: 0;
     }
 
-    .btwaf-version-badge {
-        background-color: #eee;
-        color: var(--btwaf-text-muted);
+    .btwaf-version {
         font-size: 12px;
+        color: var(--btwaf-text-muted);
+        background: #f0f2f5;
         padding: 2px 6px;
         border-radius: 4px;
         margin-left: 10px;
-        font-weight: normal;
     }
 
-    .btwaf-btn {
-        padding: 6px 15px;
-        border-radius: 4px;
-        border: 1px solid var(--btwaf-border);
-        background-color: #fff;
-        color: var(--btwaf-text);
-        cursor: pointer;
-        font-size: 13px;
-        transition: all 0.2s;
-        outline: none;
-    }
-
-    .btwaf-btn:hover {
-        background-color: #f9f9f9;
-    }
-
-    .btwaf-btn-primary {
-        background-color: var(--btwaf-primary);
-        border-color: var(--btwaf-primary);
-        color: white;
-    }
-
-    .btwaf-btn-primary:hover {
-        background-color: #1b8c31;
-    }
-
-    .btwaf-btn-danger {
-        background-color: var(--btwaf-danger);
-        border-color: var(--btwaf-danger);
-        color: white;
-    }
-
-    .btwaf-btn-danger:hover {
-        background-color: #c9302c;
-    }
-
-    /* 面板内容 */
     .btwaf-panel {
         display: none;
-        padding: 20px 30px;
+        padding: 20px 25px;
+        background-color: var(--btwaf-bg);
+        flex: 1;
     }
 
     .btwaf-panel.active {
@@ -142,10 +117,10 @@
     }
 
     .btwaf-card {
-        border: 1px solid var(--btwaf-border);
-        border-radius: 6px;
+        background: #fff;
+        border-radius: 4px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         margin-bottom: 20px;
-        background-color: #fff;
     }
 
     .btwaf-card-header {
@@ -153,628 +128,445 @@
         border-bottom: 1px solid var(--btwaf-border);
         font-weight: 500;
         font-size: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
 
     .btwaf-card-body {
         padding: 20px;
     }
 
-    /* 状态卡片 */
-    .btwaf-status-grid {
+    .btwaf-dash-grid {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(4, 1fr);
         gap: 15px;
-        margin-bottom: 20px;
     }
 
-    .btwaf-status-item {
-        background-color: #f8f9fa;
+    .btwaf-dash-item {
+        background: #f8f9fa;
         padding: 15px;
         border-radius: 4px;
-        display: flex;
-        flex-direction: column;
     }
 
-    .btwaf-status-label {
+    .btwaf-dash-label {
+        font-size: 13px;
         color: var(--btwaf-text-muted);
-        font-size: 12px;
-        margin-bottom: 5px;
+        margin-bottom: 8px;
     }
 
-    .btwaf-status-value {
-        font-size: 16px;
-        font-weight: 500;
+    .btwaf-dash-val {
+        font-size: 18px;
+        font-weight: bold;
+        color: var(--btwaf-text);
     }
 
-    .btwaf-text-danger {
-        color: var(--btwaf-danger);
-    }
-    .btwaf-text-success {
-        color: var(--btwaf-primary);
+    .btwaf-btn {
+        padding: 6px 15px;
+        border-radius: 4px;
+        border: 1px solid var(--btwaf-border);
+        background-color: #fff;
+        cursor: pointer;
+        font-size: 13px;
+        transition: all 0.2s;
     }
 
-    /* 表单样式 */
+    .btwaf-btn-primary {
+        background-color: var(--btwaf-primary);
+        border-color: var(--btwaf-primary);
+        color: #fff;
+    }
+
+    .btwaf-btn-danger {
+        background-color: var(--btwaf-danger);
+        border-color: var(--btwaf-danger);
+        color: #fff;
+    }
+
     .btwaf-form-group {
         display: flex;
         align-items: center;
         margin-bottom: 15px;
     }
 
-    .btwaf-form-label {
+    .btwaf-form-group label {
         width: 100px;
-        font-size: 13px;
+        font-size: 14px;
         color: var(--btwaf-text);
     }
 
-    .btwaf-form-control {
-        flex: 1;
-        max-width: 300px;
-        padding: 8px 12px;
+    .btwaf-select, .btwaf-input {
+        padding: 6px 10px;
         border: 1px solid var(--btwaf-border);
         border-radius: 4px;
-        font-size: 13px;
-    }
-    
-    .btwaf-form-control:focus {
+        font-size: 14px;
+        width: 200px;
         outline: none;
-        border-color: var(--btwaf-primary);
     }
 
-    select.btwaf-form-control {
-        appearance: none;
-        background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23333' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
-        background-repeat: no-repeat;
-        background-position: right 10px center;
-        padding-right: 30px;
-    }
-
-    .btwaf-action-row {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    /* 日志控制台 */
-    .btwaf-log-console {
-        background-color: #f8f9fa;
-        border: 1px solid var(--btwaf-border);
-        border-radius: 4px;
+    .btwaf-log-container {
+        background-color: #1e1e1e;
+        color: #a6e22e;
+        font-family: Consolas, Monaco, monospace;
+        font-size: 13px;
         padding: 15px;
-        min-height: 100px;
-        font-family: monospace;
-        font-size: 12px;
-        color: #666;
-        display: flex;
-        align-items: flex-start;
+        border-radius: 4px;
+        height: 400px;
+        overflow-y: auto;
         white-space: pre-wrap;
-    }
-
-    .btwaf-log-console .btwaf-warning-icon {
-        color: #f0ad4e;
-        margin-right: 8px;
+        line-height: 1.5;
     }
 </style>
 
 <div class="btwaf-wrap">
     <!-- 侧边栏 -->
     <div class="btwaf-sidebar">
-        <div class="btwaf-menu-item active" data-target="btwaf-panel-defense">
-            <span class="btwaf-menu-icon">🛡️</span> 安全防御
+        <div class="btwaf-sidebar-header">企业级防御与反制WAF</div>
+        <div class="btwaf-menu-item active" onclick="btwaf_switchTab('dashboard')">
+            <span class="btwaf-menu-icon">🛡️</span>安全总览
         </div>
-        <div class="btwaf-menu-item" data-target="btwaf-panel-framework">
-            <span class="btwaf-menu-icon">⚙️</span> 框架适配
+        <div class="btwaf-menu-item" onclick="btwaf_switchTab('honeypot')">
+            <span class="btwaf-menu-icon">🍯</span>蜜罐防御 <span style="font-size:10px; color:#999; margin-left:5px;">(未开启)</span>
         </div>
-        <div class="btwaf-menu-item" data-target="btwaf-panel-inspect">
-            <span class="btwaf-menu-icon">🔒</span> 防篡改巡检
+        <div class="btwaf-menu-item" onclick="btwaf_switchTab('cc')">
+            <span class="btwaf-menu-icon">⚡</span>CC 防御 <span style="font-size:10px; color:#999; margin-left:5px;">(未开启)</span>
         </div>
-        <div class="btwaf-menu-item" data-target="btwaf-panel-gateway">
-            <span class="btwaf-menu-icon">🌐</span> 双模反控
+        <div class="btwaf-menu-item" onclick="btwaf_switchTab('logs')">
+            <span class="btwaf-menu-icon">🚨</span>实时告警
         </div>
-        <div class="btwaf-menu-item" data-target="btwaf-panel-logs-view">
-            <span class="btwaf-menu-icon">📜</span> 拦截日志
+        <div class="btwaf-menu-item" onclick="btwaf_switchTab('geoip')">
+            <span class="btwaf-menu-icon">🌍</span>GeoIP <span style="font-size:10px; color:#999; margin-left:5px;">(未开启)</span>
         </div>
-        <div class="btwaf-menu-item" data-target="btwaf-panel-docs">
-            <span class="btwaf-menu-icon">📖</span> 使用说明
+        <div class="btwaf-menu-item" onclick="btwaf_switchTab('threat')">
+            <span class="btwaf-menu-icon">📡</span>威胁情报 <span style="font-size:10px; color:#999; margin-left:5px;">(未开启)</span>
+        </div>
+        <div class="btwaf-menu-item" onclick="btwaf_switchTab('blacklist')">
+            <span class="btwaf-menu-icon">🚫</span>IP 黑名单 <span style="font-size:10px; color:#999; margin-left:5px;">(未开启)</span>
+        </div>
+        <div class="btwaf-menu-item" onclick="btwaf_switchTab('tamper')">
+            <span class="btwaf-menu-icon">🔒</span>防篡改巡检
+        </div>
+        <div class="btwaf-menu-item" onclick="btwaf_switchTab('framework')">
+            <span class="btwaf-menu-icon">⚙️</span>框架适配
+        </div>
+        <div class="btwaf-menu-item" onclick="btwaf_switchTab('help')">
+            <span class="btwaf-menu-icon">📖</span>使用说明
         </div>
     </div>
 
     <!-- 主内容区 -->
     <div class="btwaf-main-content">
         <div class="btwaf-header">
-            <h1>企业级安全防御与反制 WAF <span class="btwaf-version-badge">v3.0.3</span></h1>
-            <div>
-                <button class="btwaf-btn" id="btwaf-global-toggle-btn" style="background-color: var(--btwaf-primary); color: white; margin-right: 10px;" onclick="btwafToggleWaf()">全局防御: 开启</button>
-                <button class="btwaf-btn btwaf-btn-primary" onclick="btwafReloadNginx()">重载 Nginx 引擎</button>
-                <button class="btwaf-btn" onclick="btwafRefreshStatus()">刷新界面状态</button>
-            </div>
+            <h1>企业级安全防御控制台 <span class="btwaf-version">v4.0.2</span></h1>
+            <button class="btwaf-btn" onclick="btwaf_loadDashboard()">刷新状态</button>
         </div>
 
-        <!-- 安全防御面板 -->
-        <div id="btwaf-panel-defense" class="btwaf-panel active">
+        <!-- 面板 1：安全总览 -->
+        <div id="btwaf_panel_dashboard" class="btwaf-panel active">
             <div class="btwaf-card">
-                <div class="btwaf-card-header">Nginx 防御状态</div>
+                <div class="btwaf-card-header">防御总览</div>
                 <div class="btwaf-card-body">
-                    <div class="btwaf-status-grid">
-                        <div class="btwaf-status-item">
-                            <span class="btwaf-status-label">当前站点</span>
-                            <span class="btwaf-status-value" id="btwaf-current-site-display">未选择</span>
+                    <div class="btwaf-dash-grid">
+                        <div class="btwaf-dash-item">
+                            <div class="btwaf-dash-label">全局 WAF 引擎</div>
+                            <div class="btwaf-dash-val" id="dash_global_waf" style="color:var(--btwaf-primary);">开启</div>
                         </div>
-                        <!-- 注入状态 -->
-                        <div class="btwaf-status-item">
-                            <div class="btwaf-status-label">注入状态</div>
-                            <div class="btwaf-status-value" id="val-inject-status">获取中...</div>
+                        <div class="btwaf-dash-item">
+                            <div class="btwaf-dash-label">蜜罐 (Tarpit)</div>
+                            <div class="btwaf-dash-val" style="color:var(--btwaf-primary);">默认开启</div>
                         </div>
-
-                        <!-- 引擎文件状态 -->
-                        <div class="btwaf-status-item">
-                            <div class="btwaf-status-label">底层引擎文件</div>
-                            <div class="btwaf-status-value" id="val-lua-status" style="font-size: 14px; margin-top: 5px;">获取中...</div>
+                        <div class="btwaf-dash-item">
+                            <div class="btwaf-dash-label">CC 防御</div>
+                            <div class="btwaf-dash-val" style="color:var(--btwaf-primary);">强制拦截</div>
                         </div>
-
-                        <!-- 拦截数 -->
-                        <div class="btwaf-status-item">
-                            <span class="btwaf-status-label">今日拦截次数</span>
-                            <span class="btwaf-status-value" id="val-blocked-count" style="color:var(--btwaf-danger)">0次</span>
+                        <div class="btwaf-dash-item">
+                            <div class="btwaf-dash-label">威胁情报</div>
+                            <div class="btwaf-dash-val">关闭</div>
+                        </div>
+                        <div class="btwaf-dash-item">
+                            <div class="btwaf-dash-label">今日硬封禁 IP</div>
+                            <div class="btwaf-dash-val">0</div>
+                        </div>
+                        <div class="btwaf-dash-item">
+                            <div class="btwaf-dash-label">今日拦截事件</div>
+                            <div class="btwaf-dash-val" id="dash_event_count">0 次</div>
                         </div>
                     </div>
-                    <div class="btwaf-action-row">
-                        <span style="font-size: 13px; color: var(--btwaf-text-muted);">站点名称</span>
-                        <select class="btwaf-form-control" id="btwaf-site-select" style="max-width: 150px; margin-left: 10px;">
-                            <option value="default">加载中...</option>
-                        </select>
-                        <button class="btwaf-btn btwaf-btn-primary" onclick="btwafCheckStatus()">检查状态</button>
-                            <button class="btwaf-btn btwaf-btn-danger" style="margin-right: 10px;" onclick="btwafInjectWaf()">一键注入防护</button>
-                            <button class="btwaf-btn btwaf-btn-primary" style="margin-right: 10px;" onclick="btwafDiagnoseLocal()">内网穿透诊断</button>
-                            <button class="btwaf-btn btwaf-btn-warning" style="margin-right: 10px;" onclick="btwafGetNginxErrorLog()">查看 Nginx 报错</button>
-                        </div>
-                    </div>
-            </div>
-
-            <div class="btwaf-card">
-                <div class="btwaf-card-header">运行日志</div>
-                <div class="btwaf-card-body">
-                    <div class="btwaf-log-console" id="btwaf-run-logs"><span class="btwaf-warning-icon">⚠️</span> 未在 Nginx 配置中检测到防御注入。</div>
                 </div>
             </div>
-        </div>
 
-        <!-- 框架适配面板 -->
-        <div id="btwaf-panel-framework" class="btwaf-panel">
             <div class="btwaf-card">
-                <div class="btwaf-card-header">多框架专项适配器 (App Shield)</div>
+                <div class="btwaf-card-header">站点防御链注入</div>
                 <div class="btwaf-card-body">
                     <div class="btwaf-form-group">
-                        <label class="btwaf-form-label">操作站点</label>
-                        <select class="btwaf-form-control" id="btwaf-framework-site-select">
-                            <option value="">正在加载站点列表...</option>
+                        <label>选择站点</label>
+                        <select id="btwaf_site_select" class="btwaf-select" onchange="btwaf_checkStatus()">
+                            <option value="default">请选择站点...</option>
                         </select>
+                        <button class="btwaf-btn btwaf-btn-primary" style="margin-left: 10px;" onclick="btwaf_checkStatus()">检查状态</button>
+                        <button class="btwaf-btn btwaf-btn-danger" style="margin-left: 10px;" onclick="btwaf_injectWaf()">一键注入防护</button>
+                        <button class="btwaf-btn" style="margin-left: 10px; background-color: #52c41a; color: #fff; border:none;" onclick="btwaf_diagnose()">内网穿透诊断</button>
                     </div>
-                    <div class="btwaf-form-group">
-                        <label class="btwaf-form-label">目标框架</label>
-                        <select class="btwaf-form-control" id="btwaf-framework-select">
-                            <option value="general">通用 WEB 应用</option>
-                            <option value="v2board">Laravel / V2Board / Xboard</option>
-                            <option value="thinkphp">ThinkPHP (TP5 / TP6)</option>
-                        </select>
-                    </div>
-                    <div class="btwaf-form-group" style="align-items: flex-start;">
-                        <label class="btwaf-form-label" style="margin-top: 8px;">目录隔离</label>
-                        <div style="font-size: 13px; color: #666; margin-top: 8px; line-height: 1.5;">
-                            开启框架专属防御后，将自动拦截对核心源码目录（如 .env, runtime 等）的敏感路径访问，并启用专属注入特征库。
-                        </div>
-                    </div>
-                    <button class="btwaf-btn btwaf-btn-primary" onclick="btwafSaveFramework()">保存配置</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- 防篡改巡检面板 -->
-        <div id="btwaf-panel-inspect" class="btwaf-panel">
-            <div class="btwaf-card">
-                <div class="btwaf-card-header">SHA-256 哈希基线与静态巡检</div>
-                <div class="btwaf-card-body">
-                    <div class="btwaf-form-group">
-                        <label class="btwaf-form-label">保护目录</label>
-                        <input type="text" class="btwaf-form-control" value="/www/wwwroot/default" id="btwaf-inspect-path" style="max-width: 400px;">
-                    </div>
-                    <div class="btwaf-action-row" style="margin-bottom: 20px;">
-                        <span class="btwaf-form-label">快捷操作</span>
-                        <button class="btwaf-btn btwaf-btn-primary" onclick="btwafGenerateBaseline()">生成/更新哈希基线</button>
-                        <button class="btwaf-btn" onclick="btwafRunInspection()">执行完整性校验</button>
+                    <div style="margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 4px;" id="btwaf_site_status">
+                        请先选择站点并检查状态。
                     </div>
                 </div>
             </div>
             
             <div class="btwaf-card">
-                <div class="btwaf-card-header">巡检报告</div>
+                <div class="btwaf-card-header">全局引擎控制</div>
                 <div class="btwaf-card-body">
-                    <div class="btwaf-log-console" id="btwaf-inspect-logs">等待扫描...</div>
+                    <button class="btwaf-btn btwaf-btn-primary" onclick="btwaf_toggleGlobal('on')">启用全局防御</button>
+                    <button class="btwaf-btn btwaf-btn-danger" style="margin-left:10px;" onclick="btwaf_toggleGlobal('off')">关闭全局防御</button>
+                    <button class="btwaf-btn" style="margin-left:10px;" onclick="btwaf_reloadNginx()">强制重载 Nginx</button>
                 </div>
             </div>
         </div>
 
-        <!-- 双模反控面板 -->
-        <div id="btwaf-panel-gateway" class="btwaf-panel">
+        <!-- 面板：实时告警 -->
+        <div id="btwaf_panel_logs" class="btwaf-panel">
             <div class="btwaf-card">
-                <div class="btwaf-card-header">边缘网关与实时告警设置</div>
+                <div class="btwaf-card-header">
+                    实时安全告警 (拦截日志)
+                    <div>
+                        <button class="btwaf-btn" onclick="btwaf_loadLogs()">刷新日志</button>
+                        <button class="btwaf-btn btwaf-btn-danger" style="margin-left:10px;" onclick="btwaf_clearLogs()">清空日志</button>
+                    </div>
+                </div>
+                <div class="btwaf-card-body">
+                    <div class="btwaf-log-container" id="btwaf_log_viewer">加载中...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 面板：防篡改巡检 -->
+        <div id="btwaf_panel_tamper" class="btwaf-panel">
+            <div class="btwaf-card">
+                <div class="btwaf-card-header">文件完整性防篡改系统</div>
                 <div class="btwaf-card-body">
                     <div class="btwaf-form-group">
-                        <label class="btwaf-form-label">网关架构</label>
-                        <select class="btwaf-form-control" id="btwaf-gateway-mode">
-                            <option value="local">Local Webhook 模式 (源站直连)</option>
-                            <option value="worker">Cloudflare Worker 模式 (抗失联)</option>
+                        <label>防护目录</label>
+                        <input type="text" id="btwaf_baseline_path" class="btwaf-input" style="width:300px;" value="/www/wwwroot/default">
+                        <button class="btwaf-btn btwaf-btn-primary" style="margin-left: 10px;" onclick="btwaf_genBaseline()">1. 生成安全基线</button>
+                        <button class="btwaf-btn btwaf-btn-danger" style="margin-left: 10px;" onclick="btwaf_runInspection()">2. 执行深度巡检</button>
+                    </div>
+                    <pre style="background:#f5f5f5; padding:15px; border-radius:4px;" id="btwaf_tamper_result">准备就绪。</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- 面板：框架适配 -->
+        <div id="btwaf_panel_framework" class="btwaf-panel">
+            <div class="btwaf-card">
+                <div class="btwaf-card-header">底层框架路由适配</div>
+                <div class="btwaf-card-body">
+                    <p style="color:#666; font-size:13px; margin-bottom: 20px;">
+                        为了防止 WAF 误杀正常的业务请求（如 Telegram Webhook，后端节点通信），请为您的站点选择正确的框架模型。
+                    </p>
+                    <div class="btwaf-form-group">
+                        <label>适配框架</label>
+                        <select id="btwaf_framework_select" class="btwaf-select">
+                            <option value="v2board">V2Board (机场专属免死金牌)</option>
+                            <option value="general">通用站点 (普通博客/企业站)</option>
                         </select>
                     </div>
-                    <div class="btwaf-form-group">
-                        <label class="btwaf-form-label">Bot Token</label>
-                        <input type="password" class="btwaf-form-control" placeholder="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11" id="btwaf-bot-token">
-                    </div>
-                    <div class="btwaf-form-group">
-                        <label class="btwaf-form-label">Chat ID</label>
-                        <input type="text" class="btwaf-form-control" placeholder="-100123456789" id="btwaf-chat-id">
-                    </div>
-                    <button class="btwaf-btn btwaf-btn-primary" style="margin-top: 10px;" onclick="btwafSaveGateway()">保存配置</button>
+                    <button class="btwaf-btn btwaf-btn-primary" onclick="btwaf_saveFramework()">保存适配规则并注入</button>
                 </div>
             </div>
         </div>
 
-        <!-- 拦截日志面板 -->
-        <div id="btwaf-panel-logs-view" class="btwaf-panel">
+        <!-- 面板：使用说明 -->
+        <div id="btwaf_panel_help" class="btwaf-panel">
             <div class="btwaf-card">
-                <div class="btwaf-card-header" style="display: flex; justify-content: space-between; align-items: center;">
-                    <span>实时拦截日志 (按日智能切割)</span>
-                    <div>
-                        <button class="btwaf-btn" onclick="btwafLoadInterceptLogs()" style="padding: 2px 8px; font-size: 12px; margin-right: 5px;">刷新</button>
-                        <button class="btwaf-btn btwaf-btn-danger" onclick="btwafClearLogs()" style="padding: 2px 8px; font-size: 12px;">清空日志</button>
-                    </div>
-                </div>
-                <div class="btwaf-card-body">
-                    <div class="btwaf-log-console" id="btwaf-intercept-logs-display" style="height: 350px; overflow-y: auto; background-color: #1e1e1e; color: #a9b7c6; border-color: #333;">加载中...</div>
+                <div class="btwaf-card-header">使用说明书</div>
+                <div class="btwaf-card-body" style="font-size: 14px; line-height: 1.8;">
+                    <h3 style="margin-top:0;">架构原理</h3>
+                    <p>本 WAF 运行在 Nginx Lua 层（应用防火墙），不仅防御 SQL 注入等常规攻击，特有的**“焦油坑反制”**和**“空 UA 斩杀”**专门对抗 GFW 主动嗅探和网络空间测绘扫描器。</p>
+                    <h3>第一步：注入站点</h3>
+                    <p>在【安全总览】中选择您的域名，点击“一键注入防护”。插件会自动修改 Nginx 的 server 块并生效规则。</p>
+                    <h3>第二步：适配框架</h3>
+                    <p>如果是 V2Board 机场面板，请在【框架适配】中选择 V2Board，以免误杀节点通信和 Telegram 机器人。</p>
+                    <h3>内网诊断工具</h3>
+                    <p>如果您不确定防护是否生效，点击【内网穿透诊断】，系统会向您自己发射一枚攻击探针，如果是绿色的 406 或 444 状态码，说明防护固若金汤！</p>
                 </div>
             </div>
         </div>
 
-        <!-- 使用说明面板 -->
-        <div id="btwaf-panel-docs" class="btwaf-panel">
-            <div class="btwaf-card">
-                <div class="btwaf-card-header">插件使用说明</div>
-                <div class="btwaf-card-body" style="font-size: 14px; line-height: 1.6; color: #444;">
-                    <h3 style="margin-bottom: 10px;">1. 核心防御机制</h3>
-                    <p style="margin-bottom: 15px;">本插件通过修改 Nginx 配置文件，注入 Lua 拦截脚本。由于运行在 Nginx 层面，性能极高。针对 V2Board/Laravel 等现代框架，建议在“框架适配”中开启专属模式。</p>
-                    
-                    <h3 style="margin-bottom: 10px;">2. 双模反控原理</h3>
-                    <p style="margin-bottom: 15px;">在面对极端 CC 或 DDoS 攻击导致源站带宽打满时，传统的 SSH 或宝塔面板可能无法登录。此时，通过部署 <b>Cloudflare Worker</b> 代理 Telegram Webhook 请求，即使源站失联，您依然可以通过 Telegram 机器人向源站下发封禁、开启全局验证码等指令（通过 CF 边缘网络隐蔽回源）。</p>
-                    
-                    <h3 style="margin-bottom: 10px;">3. 目录权限说明</h3>
-                    <p>插件会在 <code>/www/server/nginx/conf/waf/</code> 目录下生成规则文件，请确保 Nginx 进程对该目录具有读权限。</p>
-                </div>
-            </div>
+        <!-- 其他开发中面板的占位符 -->
+        <div id="btwaf_panel_honeypot" class="btwaf-panel">
+            <div class="btwaf-card"><div class="btwaf-card-body">蜜罐防御配置面板即将上线 (Phase 2)...</div></div>
         </div>
+        <div id="btwaf_panel_cc" class="btwaf-panel">
+            <div class="btwaf-card"><div class="btwaf-card-body">CC 防御高级配置面板即将上线 (Phase 2)...</div></div>
+        </div>
+        <div id="btwaf_panel_geoip" class="btwaf-panel">
+            <div class="btwaf-card"><div class="btwaf-card-body">GeoIP 地区封锁面板即将上线 (Phase 3)...</div></div>
+        </div>
+        <div id="btwaf_panel_threat" class="btwaf-panel">
+            <div class="btwaf-card"><div class="btwaf-card-body">威胁情报订阅面板即将上线 (Phase 3)...</div></div>
+        </div>
+        <div id="btwaf_panel_blacklist" class="btwaf-panel">
+            <div class="btwaf-card"><div class="btwaf-card-body">自定义 IP 黑白名单管理即将上线 (Phase 2)...</div></div>
+        </div>
+
     </div>
 </div>
 
 <script>
-    // 侧边栏切换逻辑
-    document.querySelectorAll('.btwaf-menu-item').forEach(item => {
-        item.addEventListener('click', function() {
-            document.querySelectorAll('.btwaf-menu-item').forEach(m => m.classList.remove('active'));
-            document.querySelectorAll('.btwaf-panel').forEach(p => p.classList.remove('active'));
-            
-            this.classList.add('active');
-            const targetId = this.getAttribute('data-target');
-            document.getElementById(targetId).classList.add('active');
-        });
-    });
+    var btwaf_current_site = "";
 
-    // 核心请求封装
-    function btwafApiRequest(action, data, callback) {
-        if (typeof $ !== 'undefined' && typeof layer !== 'undefined') {
-            var loadT = layer.msg('处理中...', {icon: 16, time: 0, shade: [0.3, '#000']});
-            $.post('/plugin?action=a&name=btwaf_v2board&s=' + action, data, function(res) {
-                layer.close(loadT);
-                if (typeof res === 'string') {
-                    try { res = JSON.parse(res); } catch(e) { console.error("JSON parse error:", e, res); }
-                }
-                if(callback) callback(res);
-            }).fail(function(xhr, status, error) {
-                layer.close(loadT);
-                layer.msg('网络请求失败: ' + error, {icon: 2});
-            });
-        } else {
-            console.log('Mock request: ', action, data);
-        }
+    function btwaf_switchTab(tabId) {
+        document.querySelectorAll('.btwaf-menu-item').forEach(function(el) {
+            el.classList.remove('active');
+        });
+        event.currentTarget.classList.add('active');
+
+        document.querySelectorAll('.btwaf-panel').forEach(function(el) {
+            el.classList.remove('active');
+        });
+        document.getElementById('btwaf_panel_' + tabId).classList.add('active');
+
+        if(tabId === 'logs') btwaf_loadLogs();
+        if(tabId === 'dashboard') btwaf_loadDashboard();
     }
 
-    // 自动加载站点列表
-    function btwafLoadSites() {
-        btwafApiRequest('get_sites', {}, function(res) {
-            if(res && res.status) {
-                const select = document.getElementById('btwaf-site-select');
-                const frameworkSelect = document.getElementById('btwaf-framework-site-select');
-                select.innerHTML = '';
-                frameworkSelect.innerHTML = '';
-                
-                if(res.msg.length === 0) {
-                    select.innerHTML = '<option value="">未检测到站点</option>';
-                    frameworkSelect.innerHTML = '<option value="">未检测到站点</option>';
-                    return;
+    function btwaf_api(method, args, callback) {
+        var loading = layer.msg('处理中...', {icon: 16, time: 0, shade: 0.3});
+        $.post('/plugin?action=a&name=btwaf_v2board&s=' + method, args, function(res) {
+            layer.close(loading);
+            if (callback) callback(res);
+            else layer.msg(res.msg, {icon: res.status ? 1 : 2});
+        });
+    }
+
+    function btwaf_initSites() {
+        $.post('/plugin?action=a&name=btwaf_v2board&s=get_sites', {}, function(res) {
+            if (res.status) {
+                var options = '<option value="default">请选择站点...</option>';
+                for (var i = 0; i < res.msg.length; i++) {
+                    options += '<option value="' + res.msg[i] + '">' + res.msg[i] + '</option>';
                 }
-                
-                res.msg.forEach(site => {
-                    select.innerHTML += `<option value="${site}">${site}</option>`;
-                    frameworkSelect.innerHTML += `<option value="${site}">${site}</option>`;
-                });
-                
-                document.getElementById('btwaf-current-site-display').textContent = select.value;
-                btwafCheckStatus();
-                btwafLoadFramework();
-            } else {
-                const errorMsg = (res && res.msg) ? res.msg : '未知错误';
-                if(res && res.status === false) {
-                    layer.msg('读取站点失败: ' + errorMsg, {icon: 2, time: 3000});
-                }
+                document.getElementById('btwaf_site_select').innerHTML = options;
             }
         });
     }
 
-    // 监听主面板站点下拉切换
-    document.getElementById('btwaf-site-select').addEventListener('change', function() {
-        document.getElementById('btwaf-current-site-display').textContent = this.value;
-        document.getElementById('btwaf-inject-status').textContent = '未知';
-        document.getElementById('btwaf-inject-status').className = 'btwaf-status-value';
-        btwafCheckStatus();
-    });
-    
-    // 监听框架配置站点下拉切换
-    document.getElementById('btwaf-framework-site-select').addEventListener('change', function() {
-        btwafLoadFramework();
-    });
-
-    function btwafLoadFramework() {
-        const siteName = document.getElementById('btwaf-framework-site-select').value;
-        if (!siteName) return;
-        btwafApiRequest('get_framework', { siteName: siteName }, function(res) {
-            if (res && res.status) {
-                document.getElementById('btwaf-framework-select').value = res.msg;
+    function btwaf_loadDashboard() {
+        var site = document.getElementById('btwaf_site_select').value;
+        $.post('/plugin?action=a&name=btwaf_v2board&s=get_status', {siteName: site}, function(res) {
+            if(res.status) {
+                var d = res.msg;
+                document.getElementById('dash_global_waf').innerText = (d.global_enable === 'on' ? '开启' : '关闭');
+                document.getElementById('dash_global_waf').style.color = (d.global_enable === 'on' ? 'var(--btwaf-primary)' : 'var(--btwaf-danger)');
+                document.getElementById('dash_event_count').innerText = d.blockedCount + " 次";
             }
         });
     }
 
-    // 页面加载完成后立即拉取站点列表
-    setTimeout(btwafLoadSites, 300);
-
-    // 交互函数 - 防冲突命名
-    function btwafRefreshStatus() {
-        btwafLoadSites();
-        layer.msg('界面状态已刷新', {icon: 1});
-    }
-
-    function btwafReloadNginx() {
-        document.getElementById('btwaf-run-logs').innerHTML = `<span class="btwaf-warning-icon" style="color:var(--btwaf-primary)">ℹ️</span> 正在通知底层重载 Nginx 引擎，清除旧版 Lua 缓存...`;
-        btwafApiRequest('reload_nginx', {}, function(res) {
-            if (res && res.status) {
-                layer.msg('Nginx 引擎已重载，新规则已生效！', {icon: 1});
-                document.getElementById('btwaf-run-logs').innerHTML = `<span class="btwaf-warning-icon" style="color:var(--btwaf-primary)">✅</span> 引擎重载成功，缓存已清除。`;
-            } else {
-                layer.msg('重载失败', {icon: 2});
-                document.getElementById('btwaf-run-logs').innerHTML = `<span class="btwaf-warning-icon" style="color:var(--btwaf-danger)">❌</span> 重载失败: ${res ? res.msg : ''}`;
-            }
-        });
-    }
-
-    let currentWafStatus = 'on';
-
-    function btwafToggleWaf() {
-        const nextAction = currentWafStatus === 'on' ? 'off' : 'on';
-        const actionText = nextAction === 'on' ? '开启' : '关闭';
-        
-        layer.confirm(`确定要全局${actionText}防火墙吗？`, {icon: 3, title:'总开关'}, function(index){
-            layer.close(index);
-            layer.msg(`正在${actionText}全局防御...`, {icon: 16, shade: 0.1, time: 0});
-            
-            btwafApiRequest('toggle_waf', { waf_action: nextAction }, function(res) {
-                layer.closeAll();
-                if (res && res.status) {
-                    layer.msg(res.msg, {icon: 1});
-                    btwafCheckStatus();
-                } else {
-                    layer.msg('操作失败: ' + (res ? res.msg : '未知错误'), {icon: 2});
-                }
-            });
-        });
-    }
-
-    function btwafCheckStatus() {
-        const siteName = document.getElementById('btwaf-site-select').value;
-        if (!siteName) return;
-
-        document.getElementById('btwaf-run-logs').innerHTML = `<span class="btwaf-warning-icon">ℹ️</span> 正在检查 Nginx 配置...`;
-        btwafApiRequest('get_status', { siteName: siteName }, function(res) {
-            if (res && res.status && res.msg) {
-                const isProtected = res.msg.inject_status === '已受保护';
-                document.getElementById('val-inject-status').textContent = res.msg.inject_status;
-                document.getElementById('val-inject-status').className = isProtected ? 'btwaf-status-value btwaf-text-success' : 'btwaf-status-value btwaf-text-danger';
-                document.getElementById('btwaf-run-logs').innerHTML = isProtected 
-                    ? `<span class="btwaf-warning-icon" style="color:var(--btwaf-primary)">✅</span> Nginx 已启用防御。`
-                    : `<span class="btwaf-warning-icon">⚠️</span> 未在 Nginx 配置中检测到防御注入。`;
-                    
-                if (res.msg.lua_status) {
-                    let luaStatusEl = document.getElementById('val-lua-status');
-                    if (luaStatusEl) {
-                        luaStatusEl.innerText = res.msg.lua_status;
-                        if (res.msg.lua_status.includes('已更新')) {
-                            luaStatusEl.style.color = 'var(--btwaf-success)';
-                        } else {
-                            luaStatusEl.style.color = 'var(--btwaf-danger)';
-                        }
-                    }
-                }
-                
-                if (res.msg.global_enable) {
-                    currentWafStatus = res.msg.global_enable;
-                    const btn = document.getElementById('btwaf-global-toggle-btn');
-                    if (currentWafStatus === 'on') {
-                        btn.textContent = '全局防御: 开启';
-                        btn.style.backgroundColor = 'var(--btwaf-primary)';
-                        btn.style.borderColor = 'var(--btwaf-primary)';
-                    } else {
-                        btn.textContent = '全局防御: 已关闭';
-                        btn.style.backgroundColor = 'var(--btwaf-danger)';
-                        btn.style.borderColor = 'var(--btwaf-danger)';
-                    }
-                }
-                
-                if (res.msg.blockedCount !== undefined) {
-                    const blockCountEl = document.getElementById('val-blocked-count');
-                    if (blockCountEl) {
-                        blockCountEl.innerText = res.msg.blockedCount + '次';
-                    }
-                }
-            } else {
-                document.getElementById('btwaf-run-logs').innerHTML = `<span class="btwaf-warning-icon">❌</span> 检测失败。`;
-            }
-        });
-    }
-
-    function btwafDiagnoseLocal() {
-        const siteName = document.getElementById('btwaf-site-select').value;
-        if (!siteName) {
-            layer.msg('请先选择要诊断的站点', {icon: 2});
+    function btwaf_checkStatus() {
+        var site = document.getElementById('btwaf_site_select').value;
+        if(site === "default") {
+            layer.msg("请选择站点", {icon: 2});
             return;
         }
-        document.getElementById('btwaf-run-logs').innerHTML = `<span class="btwaf-warning-icon" style="color:var(--btwaf-primary)">ℹ️</span> 正在通过底层 127.0.0.1 直接发起探测请求，请稍候...`;
-        btwafApiRequest('diagnose_local', { siteName: siteName }, function(res) {
-            if (res && res.status) {
-                document.getElementById('btwaf-run-logs').innerHTML = `<span class="btwaf-warning-icon" style="color:var(--btwaf-success)">✅</span> ${res.msg}`;
-                layer.msg('内核拦截成功！', {icon: 1});
-            } else {
-                document.getElementById('btwaf-run-logs').innerHTML = `<span class="btwaf-warning-icon" style="color:var(--btwaf-danger)">❌</span> ${res ? res.msg : '请求失败'}`;
-            }
-        });
-    }
-
-    function btwafGetNginxErrorLog() {
-        const siteName = document.getElementById('btwaf-site-select').value;
-        if (!siteName) {
-            layer.msg('请先选择站点', {icon: 2});
-            return;
-        }
-        btwafApiRequest('get_nginx_error_log', { siteName: siteName }, function(res) {
-            if (res && res.status) {
-                layer.open({
-                    type: 1,
-                    title: 'Nginx 错误日志',
-                    area: ['800px', '500px'],
-                    content: `<div style="padding: 15px; background: #1e1e1e; color: #d4d4d4; font-family: monospace; white-space: pre-wrap; height: 100%; box-sizing: border-box; overflow-y: auto;">${res.msg}</div>`
+        btwaf_current_site = site;
+        btwaf_api('get_status', {siteName: site}, function(res) {
+            if(res.status) {
+                var html = `
+                    <div style="display:flex; gap: 30px;">
+                        <div>当前站点：<b>${res.msg.siteName}</b></div>
+                        <div>注入状态：<b style="color:${res.msg.inject_status==='已受保护'?'#52c41a':'#f5222d'}">${res.msg.inject_status}</b></div>
+                        <div>底层引擎文件：<b>${res.msg.lua_status}</b></div>
+                    </div>
+                `;
+                document.getElementById('btwaf_site_status').innerHTML = html;
+                btwaf_loadDashboard();
+                
+                $.post('/plugin?action=a&name=btwaf_v2board&s=get_framework', {siteName: site}, function(res2) {
+                    if(res2.status) {
+                        document.getElementById('btwaf_framework_select').value = res2.msg;
+                    }
                 });
             } else {
-                layer.msg('读取失败: ' + (res ? res.msg : ''), {icon: 2});
+                layer.msg(res.msg, {icon: 2});
             }
         });
     }
 
-    function btwafInjectWaf() {
-        const siteName = document.getElementById('btwaf-site-select').value;
-        if (!siteName) {
-            layer.msg('请先选择要防御的站点', {icon: 2});
-            return;
-        }
-
-        layer.confirm(`这将会向站点 ${siteName} 注入 WAF 防御模块，修改前会自动备份。是否继续？`, {icon: 3, title:'防御注入确认'}, function(index){
-            layer.close(index);
-            document.getElementById('btwaf-run-logs').innerHTML = `<span class="btwaf-warning-icon" style="color:var(--btwaf-primary)">ℹ️</span> 正在注入 WAF 规则...`;
-            
-            btwafApiRequest('inject_waf', { siteName: siteName }, function(res) {
-                if (res && res.status) {
-                    layer.msg('注入成功', {icon: 1});
-                    btwafCheckStatus();
-                    btwafLoadFramework();
-                } else {
-                    const errorMsg = (res && res.msg) ? res.msg : '未知错误';
-                    layer.msg('注入失败: ' + errorMsg, {icon: 2, time: 5000});
-                    document.getElementById('btwaf-run-logs').innerHTML = `<span class="btwaf-warning-icon" style="color:var(--btwaf-danger)">❌</span> 注入失败: ${errorMsg}`;
-                }
-            });
+    function btwaf_injectWaf() {
+        var site = document.getElementById('btwaf_site_select').value;
+        if(site === "default") return layer.msg("请先选择站点", {icon: 2});
+        btwaf_api('inject_waf', {siteName: site}, function(res) {
+            layer.msg(res.msg, {icon: res.status ? 1 : 2});
+            if(res.status) btwaf_checkStatus();
         });
     }
 
-    function btwafSaveFramework() {
-        const siteName = document.getElementById('btwaf-framework-site-select').value;
-        const framework = document.getElementById('btwaf-framework-select').value;
-        
-        if (!siteName) {
-            layer.msg('请先选择操作站点', {icon: 2});
-            return;
-        }
-        
-        layer.msg('正在保存框架适配配置...', {icon: 16, shade: 0.1, time: 0});
-        btwafApiRequest('set_framework', { siteName: siteName, framework: framework }, function(res) {
-            layer.closeAll();
-            if (res && res.status) {
-                layer.msg('框架配置已完美应用！请重载 Nginx 引擎使其生效。', {icon: 1, time: 3000});
+    function btwaf_diagnose() {
+        var site = document.getElementById('btwaf_site_select').value;
+        if(site === "default") return layer.msg("请先选择站点", {icon: 2});
+        btwaf_api('diagnose_local', {siteName: site}, function(res) {
+            if(res.status) {
+                document.getElementById('btwaf_site_status').innerHTML += `<div style="margin-top:10px; color:#52c41a; font-weight:bold;">✅ ${res.msg}</div>`;
             } else {
-                layer.msg('配置保存失败: ' + (res ? res.msg : '未知错误'), {icon: 2});
+                document.getElementById('btwaf_site_status').innerHTML += `<div style="margin-top:10px; color:#f5222d; font-weight:bold;">❌ ${res.msg}</div>`;
             }
         });
     }
 
-    function btwafGenerateBaseline() {
-        const path = document.getElementById('btwaf-inspect-path').value;
-        document.getElementById('btwaf-inspect-logs').innerHTML = `开始针对目录 ${path} 生成 SHA-256 哈希基线...\n扫描中...`;
-        setTimeout(() => {
-            document.getElementById('btwaf-inspect-logs').innerHTML = `✅ 基线生成完成。共扫描 1,452 个文件。\n基线数据已安全保存。`;
-        }, 2000);
-    }
-
-    function btwafRunInspection() {
-        document.getElementById('btwaf-inspect-logs').innerHTML = `正在读取基线数据并校验文件完整性...\n`;
-        setTimeout(() => {
-            document.getElementById('btwaf-inspect-logs').innerHTML += `校验完成。\n✅ 未发现任何文件被篡改。`;
-        }, 1500);
-    }
-
-    function btwafSaveGateway() {
-        const token = document.getElementById('btwaf-bot-token').value;
-        const chat = document.getElementById('btwaf-chat-id').value;
-        if (!token || !chat) {
-            layer.msg('请填写完整的 Token 和 Chat ID', {icon: 2});
-            return;
-        }
-        layer.msg('网关配置已保存', {icon: 1});
-    }
-
-    function btwafLoadInterceptLogs() {
-        const logDisplay = document.getElementById('btwaf-intercept-logs-display');
-        logDisplay.innerHTML = `正在读取今日拦截日志...`;
-        btwafApiRequest('get_logs', {}, function(res) {
-            if (res && res.status) {
-                logDisplay.textContent = res.msg || '暂无拦截记录。';
-                logDisplay.scrollTop = logDisplay.scrollHeight;
-            } else {
-                logDisplay.innerHTML = `<span style="color:var(--btwaf-danger)">读取日志失败: ${res ? res.msg : '未知错误'}</span>`;
-            }
+    function btwaf_toggleGlobal(action) {
+        btwaf_api('toggle_waf', {waf_action: action}, function(res) {
+            layer.msg(res.msg, {icon: res.status ? 1 : 2});
+            btwaf_loadDashboard();
         });
     }
 
-    function btwafClearLogs() {
-        layer.confirm('确定要彻底清空所有拦截日志吗？此操作不可恢复。', {icon: 3, title:'清空确认'}, function(index){
-            layer.close(index);
-            const logDisplay = document.getElementById('btwaf-intercept-logs-display');
-            logDisplay.innerHTML = `正在清空...`;
-            btwafApiRequest('clear_logs', {}, function(res) {
-                if (res && res.status) {
-                    layer.msg('日志已清空', {icon: 1});
-                    logDisplay.innerHTML = '暂无拦截记录。';
-                } else {
-                    layer.msg('清空失败', {icon: 2});
-                }
+    function btwaf_reloadNginx() {
+        btwaf_api('reload_nginx', {}, function(res) {
+            layer.msg(res.msg, {icon: 1});
+        });
+    }
+
+    function btwaf_loadLogs() {
+        document.getElementById('btwaf_log_viewer').innerText = "加载中...";
+        btwaf_api('get_logs', {}, function(res) {
+            document.getElementById('btwaf_log_viewer').innerText = res.status ? res.msg : "暂无日志。";
+        });
+    }
+
+    function btwaf_clearLogs() {
+        if(confirm("确定清空今日拦截日志？")) {
+            btwaf_api('clear_logs', {}, function(res) {
+                layer.msg(res.msg, {icon: 1});
+                btwaf_loadLogs();
             });
+        }
+    }
+
+    function btwaf_genBaseline() {
+        var path = document.getElementById('btwaf_baseline_path').value;
+        btwaf_api('generate_baseline', {path: path}, function(res) {
+            document.getElementById('btwaf_tamper_result').innerText = res.msg;
         });
     }
 
-    // 在页面加载后和切换到日志面板时，自动加载日志
-    document.querySelector('.btwaf-menu-item[data-target="btwaf-panel-logs-view"]').addEventListener('click', function() {
-        btwafLoadInterceptLogs();
-    });
+    function btwaf_runInspection() {
+        btwaf_api('run_inspection', {}, function(res) {
+            document.getElementById('btwaf_tamper_result').innerText = res.msg;
+            document.getElementById('btwaf_tamper_result').style.color = res.status ? "#52c41a" : "#f5222d";
+        });
+    }
 
+    function btwaf_saveFramework() {
+        var site = document.getElementById('btwaf_site_select').value;
+        if(site === "default") return layer.msg("请先在【安全总览】选择站点", {icon: 2});
+        var fw = document.getElementById('btwaf_framework_select').value;
+        btwaf_api('set_framework', {siteName: site, framework: fw}, function(res) {
+            layer.msg(res.msg, {icon: res.status ? 1 : 2});
+            if(res.status) btwaf_reloadNginx();
+        });
+    }
+
+    // 初始化
+    btwaf_initSites();
 </script>
