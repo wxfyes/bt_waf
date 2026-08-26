@@ -141,9 +141,10 @@ class btwaf_v2board_main:
                 pass
                 
         hard_blocked_count = 0
-        if os.path.exists(self.blacklist_file):
+        blacklist_path = self._get_blacklist_file()
+        if os.path.exists(blacklist_path):
             try:
-                with open(self.blacklist_file, 'r', encoding='utf-8') as f:
+                with open(blacklist_path, 'r', encoding='utf-8') as f:
                     hard_blocked_count = len([line for line in f if line.strip()])
             except:
                 pass
