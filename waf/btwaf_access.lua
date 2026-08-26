@@ -147,6 +147,27 @@ if config.cc_enable == "on" then
     end
 end
 
+-- 0.8 GeoIP 检测 (兼容 Cloudflare 与 Nginx GeoIP)
+if config.geoip_enable == "on" then
+    local headers = ngx.req.get_headers()
+    local country = headers["CF-IPCountry"] or ngx.var.geoip_country_code or ngx.var.geoip2_data_country_code
+    if country and country ~= "" and country ~= "XX" then
+        local allowed = false
+        if config.geoip_regions then
+            for allowed_country in string.gmatch(config.geoip_regions, "[A-Z0-9]+") do
+                if country == allowed_country then
+                    allowed = true
+                    break
+                end
+            end
+        end
+        if not allowed then
+            trigger_penalty("GeoIP Block", country)
+            return
+        end
+    end
+end
+
 -- 1. 框架专属防御
 if site_framework == "v2board" then
     -- V2Board 专属放行逻辑（API 订阅与服务端节点通信免死金牌）

@@ -100,6 +100,8 @@ class btwaf_v2board_main:
         drop_action = "block"
         cc_enable = "on"
         cc_rate = 30
+        geoip_enable = "off"
+        geoip_regions = "CN"
         config_file = "/www/server/nginx/conf/waf/btwaf_init.lua"
         if os.path.exists(config_file):
             try:
@@ -111,10 +113,15 @@ class btwaf_v2board_main:
                         drop_action = "tarpit"
                     if 'cc_enable = "off"' in content:
                         cc_enable = "off"
+                    if 'geoip_enable = "on"' in content:
+                        geoip_enable = "on"
                     import re
                     match = re.search(r'cc_rate\s*=\s*([0-9]+)', content)
                     if match:
                         cc_rate = int(match.group(1))
+                    match_geoip = re.search(r'geoip_regions\s*=\s*"([^"]+)"', content)
+                    if match_geoip:
+                        geoip_regions = match_geoip.group(1)
             except:
                 pass
                 
@@ -138,6 +145,8 @@ class btwaf_v2board_main:
             "drop_action": drop_action,
             "cc_enable": cc_enable,
             "cc_rate": cc_rate,
+            "geoip_enable": geoip_enable,
+            "geoip_regions": geoip_regions,
             "blockedCount": blocked_count
         })
 
@@ -156,6 +165,11 @@ class btwaf_v2board_main:
         return public.returnMsg(True, "CC 防御配置已保存并生效")
 
     def set_geoip(self, args):
+        enable = getattr(args, 'enable', 'off')
+        regions = getattr(args, 'regions', 'CN')
+        self._write_lua_config("geoip_enable", enable, True)
+        self._write_lua_config("geoip_regions", regions, True)
+        public.ExecShell("/etc/init.d/nginx reload")
         return public.returnMsg(True, "GeoIP 配置已保存并应用至底层规则。")
 
     def update_threat_intel(self, args):

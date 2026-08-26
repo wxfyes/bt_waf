@@ -651,7 +651,13 @@
 
     function btwaf_saveGeoIP() {
         var enable = document.getElementById('btwaf_geoip_enable').value;
-        btwaf_api('set_geoip', {enable: enable}, function(res) {
+        var regions = [];
+        var cbs = document.querySelectorAll('input[id^="geoip_"]:checked');
+        cbs.forEach(function(cb) {
+            regions.push(cb.id.replace('geoip_', '').toUpperCase());
+        });
+        
+        btwaf_api('set_geoip', {enable: enable, regions: regions.join(',')}, function(res) {
             layer.msg(res.msg, {icon: res.status ? 1 : 2});
         });
     }
