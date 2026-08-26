@@ -82,11 +82,13 @@ class btwaf_v2board_main:
         if not site_name or site_name == "default":
             return public.returnMsg(False, "请先选择站点")
             
-        # [极客无感热更新] 每次打开面板时，自动将最新的 lua 引擎和 rules 规则同步到底层
+        # [极客无感热更新] 每次打开面板时，自动将最新的 lua 引擎和 rules 规则同步到底层，但必须排除配置文件！
         try:
             plugin_waf_dir = os.path.join(self.plugin_path, "waf")
             if os.path.exists(plugin_waf_dir):
-                public.ExecShell(f"\\cp -rf {plugin_waf_dir}/* {self.waf_dir}/")
+                public.ExecShell(f"\\cp -rf {plugin_waf_dir}/rules/* {self.waf_dir}/rules/")
+                public.ExecShell(f"\\cp -f {plugin_waf_dir}/btwaf_access.lua {self.waf_dir}/")
+                public.ExecShell(f"\\cp -f {plugin_waf_dir}/btwaf_tarpit.lua {self.waf_dir}/")
                 public.ExecShell(f"chmod -R 755 {self.waf_dir}/rules")
                 public.ExecShell(f"chown -R www:www {self.waf_dir}")
         except:
