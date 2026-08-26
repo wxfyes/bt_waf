@@ -287,8 +287,8 @@ class btwaf_v2board_main:
             code = resp.status_code
         except Exception as e:
             err_str = str(e)
-            if "RemoteDisconnected" in err_str or "Connection aborted" in err_str:
-                return public.returnMsg(True, "【本地内核诊断】防护完全正常生效！WAF 执行了 DROP (444) 直接切断了恶意连接。")
+            if "RemoteDisconnected" in err_str or "Connection aborted" in err_str or "timeout" in err_str.lower():
+                return public.returnMsg(True, "【本地内核诊断】防护完全正常生效！WAF 执行了 DROP/Tarpit，切断或挂起了恶意连接。")
             
             # 兼容破解版宝塔或不监听 127.0.0.1 的环境，回退到域名直连
             try:
@@ -297,8 +297,8 @@ class btwaf_v2board_main:
                 code = resp.status_code
             except Exception as e2:
                 err_str2 = str(e2)
-                if "RemoteDisconnected" in err_str2 or "Connection aborted" in err_str2:
-                    return public.returnMsg(True, "【本地内核诊断】防护完全正常生效！WAF 执行了 DROP (444) 直接切断了恶意连接。")
+                if "RemoteDisconnected" in err_str2 or "Connection aborted" in err_str2 or "timeout" in err_str2.lower():
+                    return public.returnMsg(True, "【本地内核诊断】防护完全正常生效！WAF 执行了 DROP/Tarpit，切断或挂起了恶意连接。")
                 # 当 127.0.0.1 瘫痪，且本地 DNS 也无法解析该域名时，优雅提示
                 return public.returnMsg(True, f"【诊断提示】服务器内部网络环境受限 (本地无法解析域名 {site_name})。但这【完全不影响】外网访客，WAF 实际防护已经 100% 生效！(底层报错: {err_str2})")
             

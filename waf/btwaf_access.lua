@@ -16,16 +16,7 @@ if probe_file then
     probe_file:close()
 end
 
--- 【终极自检后门】如果 URL 包含 test_waf=1，无条件直接处决！
-if string.find(ngx.var.request_uri, "test_waf=1") then
-    ngx.status = 406
-    ngx.header.content_type = "text/html; charset=utf-8"
-    ngx.say([[
-    <html><head><title>WAF 拦截</title><style>body{background:#1e1e1e;color:#00ff00;font-family:monospace;padding:50px;text-align:center;}h1{font-size:40px;}</style></head>
-    <body><h1>🛑 WAF 防御测试成功 🛑</h1><p>企业级防篡改底座已完美生效！</p></body></html>
-    ]])
-    ngx.exit(406)
-end
+
 
 -- 引入依赖库
 local tarpit = require("btwaf_tarpit")
@@ -115,6 +106,12 @@ local function match_rules(data, ruleset_name)
 end
 
 -- ================= 主防御逻辑 ================= --
+
+-- 【终极自检后门】如果 URL 包含 test_waf=1，无条件直接处决！
+if string.find(ngx.var.request_uri, "test_waf=1") then
+    trigger_penalty("WAF Self-Test", "test_waf=1")
+    return
+end
 
 local site_framework = ngx.var.btwaf_framework or config.framework or "general"
 
