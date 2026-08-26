@@ -115,6 +115,11 @@ end
 
 -- ================= 主防御逻辑 ================= --
 
+-- 【静态资源放行】直接放行图片、样式、脚本等，避免浪费 CPU 及误触 CC 频率限制
+if string.match(ngx.var.uri, "%.(css|js|jpg|jpeg|png|gif|ico|woff|woff2|ttf|svg|eot|mp4|avi|mp3|zip|rar|gz|7z)$") then
+    return
+end
+
 -- 【终极自检后门】如果 URL 包含 test_waf=1，无条件直接处决！
 if string.find(ngx.var.request_uri, "test_waf=1") then
     trigger_penalty("WAF Self-Test", "test_waf=1")
