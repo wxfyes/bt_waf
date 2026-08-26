@@ -482,7 +482,8 @@
                 <div class="btwaf-card-header">底层框架路由适配</div>
                 <div class="btwaf-card-body">
                     <p style="color:#666; font-size:13px; margin-bottom: 20px;">
-                        为了防止 WAF 误杀正常的业务请求（如 Telegram Webhook，后端节点通信），请为您的站点选择正确的框架模型。
+                        为了防止 WAF 误杀正常的业务请求（如 Telegram Webhook，后端节点通信），请为您的站点选择正确的框架模型。<br>
+                        当前操作站点：<span id="btwaf_framework_current_site" style="font-weight:bold; color:var(--btwaf-primary);">请在安全总览选择</span>
                     </p>
                     <div class="btwaf-form-group" style="flex-direction:row;">
                         <label>适配框架</label>
@@ -609,29 +610,7 @@
 </div>
 
 <script>
-    // 强制宝塔父级窗口拉伸 (加入多重兼容与延时确保 Layer 已渲染)
-    setTimeout(function() {
-        try {
-            var p = window.parent;
-            var w = 1050; // 期望宽度
-            // 尝试 1：原生 Layer API
-            var idx = p.layer.getFrameIndex(window.name);
-            if (idx) {
-                var left = (p.innerWidth - w) / 2;
-                p.layer.style(idx, { width: w + 'px', left: left + 'px' });
-            }
-            // 尝试 2：直接操作 DOM
-            if (p.$) {
-                var $layer = p.$('#layui-layer' + idx);
-                var curW = $layer.width();
-                if (curW < w) {
-                    var $layerLeft = (p.innerWidth - w) / 2;
-                    $layer.css({ 'width': w + 'px', 'left': $layerLeft + 'px' });
-                    $layer.find('.layui-layer-title').css('width', '100%');
-                }
-            }
-        } catch(e) {}
-    }, 200);
+    // 移除强行拉伸的 JS (解决拖拽乱飘、关闭按钮隐藏的 bug)
 
     var btwaf_current_site = "";
 
@@ -827,6 +806,7 @@
                     </div>
                 `;
                 document.getElementById('btwaf_site_status').innerHTML = html;
+                document.getElementById('btwaf_framework_current_site').innerText = res.msg.siteName;
                 btwaf_loadDashboard();
                 
                 $.post('/plugin?action=a&name=btwaf_v2board&s=get_framework', {siteName: site}, function(res2) {
