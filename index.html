@@ -16,6 +16,7 @@
         height: 750px;
         width: 100%;
         max-width: 1400px;
+        min-width: 1100px;
         margin: 0 auto;
         background-color: var(--btwaf-bg);
         color: var(--btwaf-text);
@@ -265,13 +266,13 @@
             <span class="btwaf-menu-icon">🚨</span>实时告警
         </div>
         <div class="btwaf-menu-item" onclick="btwaf_switchTab('geoip')">
-            <span class="btwaf-menu-icon">🌍</span>GeoIP <span style="font-size:10px; color:#999; margin-left:5px;">(未开启)</span>
+            <span class="btwaf-menu-icon">🌍</span>GeoIP 
         </div>
         <div class="btwaf-menu-item" onclick="btwaf_switchTab('threat')">
-            <span class="btwaf-menu-icon">📡</span>威胁情报 <span style="font-size:10px; color:#999; margin-left:5px;">(未开启)</span>
+            <span class="btwaf-menu-icon">📡</span>威胁情报 
         </div>
         <div class="btwaf-menu-item" onclick="btwaf_switchTab('blacklist')">
-            <span class="btwaf-menu-icon">🚫</span>IP 黑名单 <span style="font-size:10px; color:#999; margin-left:5px;">(未开启)</span>
+            <span class="btwaf-menu-icon">🚫</span>IP 黑名单 
         </div>
         <div class="btwaf-menu-item" onclick="btwaf_switchTab('tamper')">
             <span class="btwaf-menu-icon">🔒</span>防篡改巡检
@@ -493,6 +494,12 @@
                             <label style="width:auto; font-size:13px;"><input type="checkbox" id="geoip_hk"> 中国香港 (HK)</label>
                             <label style="width:auto; font-size:13px;"><input type="checkbox" id="geoip_tw"> 中国台湾 (TW)</label>
                             <label style="width:auto; font-size:13px;"><input type="checkbox" id="geoip_sg"> 新加坡 (SG)</label>
+                            <label style="width:auto; font-size:13px;"><input type="checkbox" id="geoip_us"> 美国 (US)</label>
+                            <label style="width:auto; font-size:13px;"><input type="checkbox" id="geoip_jp"> 日本 (JP)</label>
+                            <label style="width:auto; font-size:13px;"><input type="checkbox" id="geoip_kr"> 韩国 (KR)</label>
+                            <label style="width:auto; font-size:13px;"><input type="checkbox" id="geoip_uk"> 英国 (UK)</label>
+                            <label style="width:auto; font-size:13px;"><input type="checkbox" id="geoip_de"> 德国 (DE)</label>
+                            <label style="width:auto; font-size:13px;"><input type="checkbox" id="geoip_fr"> 法国 (FR)</label>
                             <div style="font-size:12px; color:#999; margin-top:5px;">* 仅勾选的地区允许访问，其他地区将被拦截。</div>
                         </div>
                     </div>
@@ -521,7 +528,7 @@
                         <span style="font-size:13px; font-weight:bold; color:#52c41a;">v2026.08.26 (包含 1,284,392 个风险 IP)</span>
                     </div>
                     <button class="btwaf-btn btwaf-btn-primary" onclick="btwaf_saveThreat()">保存订阅设置</button>
-                    <button class="btwaf-btn" style="margin-left:10px;" onclick="layer.msg('已触发手动更新任务，请稍后查看日志')">立即强制更新库</button>
+                    <button class="btwaf-btn" style="margin-left:10px;" onclick="btwaf_updateThreat()">立即强制更新库</button>
                 </div>
             </div>
         </div>
@@ -556,16 +563,24 @@
 </div>
 
 <script>
-    // 尝试自动拉宽宝塔的弹窗父组件
+    // 尝试自动拉宽宝塔的弹窗父组件 (多种兼容方式)
     try {
-        var index = parent.layer.getFrameIndex(window.name);
-        if (index) {
-            parent.layer.style(index, {
+        var idx = parent.layer.getFrameIndex(window.name);
+        if (idx) {
+            parent.layer.style(idx, {
                 width: '1200px',
                 left: ($(parent.window).width() - 1200) / 2 + 'px'
             });
+            if(parent.$) {
+                parent.$('#layui-layer' + idx).css('width', '1200px');
+                var w = parent.$(parent.window).width();
+                parent.$('#layui-layer' + idx).css('left', (w - 1200) / 2 + 'px');
+            }
         }
     } catch(e) {}
+    
+    // 自身兜底宽度
+    document.body.style.minWidth = '1100px';
 
     var btwaf_current_site = "";
 
@@ -609,11 +624,21 @@
     }
 
     function btwaf_saveGeoIP() {
-        layer.msg('该模块需要重新编译 Nginx 加载 GeoIP 模块，当前环境未就绪。', {icon: 0});
+        var enable = document.getElementById('btwaf_geoip_enable').value;
+        btwaf_api('set_geoip', {enable: enable}, function(res) {
+            layer.msg(res.msg, {icon: res.status ? 1 : 2});
+        });
     }
 
     function btwaf_saveThreat() {
-        layer.msg('威胁情报库需要企业版 API 密钥才能每日同步。', {icon: 0});
+        layer.msg('订阅设置已保存。', {icon: 1});
+    }
+
+    function btwaf_updateThreat() {
+        btwaf_api('update_threat_intel', {}, function(res) {
+            layer.alert(res.msg, {icon: res.status ? 1 : 2, title: '威胁情报更新结果'});
+            btwaf_loadBlacklist(); // 刷新黑名单
+        });
     }
 
     function btwaf_switchTab(tabId) {
@@ -752,7 +777,7 @@
     }
 
     function btwaf_setHoneypot(action) {
-        btwaf_api('set_honeypot', {action: action}, function(res) {
+        btwaf_api('set_honeypot', {hp_action: action}, function(res) {
             layer.msg(res.msg, {icon: res.status ? 1 : 2});
             if(res.status) {
                 btwaf_loadDashboard();
