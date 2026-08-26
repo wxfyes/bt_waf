@@ -29,7 +29,7 @@
     }
 
     .btwaf-sidebar {
-        width: 200px;
+        width: 160px;
         background-color: var(--btwaf-sidebar-bg);
         border-right: 1px solid var(--btwaf-border);
         display: flex;
@@ -149,7 +149,7 @@
 
     .btwaf-dash-grid {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
         gap: 15px;
     }
 
@@ -242,9 +242,6 @@
 
     /* 中小屏幕适配 (宝塔默认弹窗大概 700-800px) */
     @media (max-width: 950px) {
-        .btwaf-dash-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
         .btwaf-form-group {
             flex-direction: column;
             align-items: flex-start;
