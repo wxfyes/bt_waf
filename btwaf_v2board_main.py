@@ -82,6 +82,16 @@ class btwaf_v2board_main:
         if not site_name or site_name == "default":
             return public.returnMsg(False, "请先选择站点")
             
+        # [极客无感热更新] 每次打开面板时，自动将最新的 lua 引擎和 rules 规则同步到底层
+        try:
+            plugin_waf_dir = os.path.join(self.plugin_path, "waf")
+            if os.path.exists(plugin_waf_dir):
+                public.ExecShell(f"\\cp -rf {plugin_waf_dir}/* {self.waf_dir}/")
+                public.ExecShell(f"chmod -R 755 {self.waf_dir}/rules")
+                public.ExecShell(f"chown -R www:www {self.waf_dir}")
+        except:
+            pass
+            
         site_conf_path = f"/www/server/panel/vhost/nginx/{site_name}.conf"
         injected = False
         if os.path.exists(site_conf_path):
