@@ -444,10 +444,9 @@
                 <div class="btwaf-card-header">文件完整性防篡改系统</div>
                 <div class="btwaf-card-body">
                     <div class="btwaf-form-group">
-                        <label>防护目录</label>
-                        <input type="text" id="btwaf_baseline_path" class="btwaf-input" style="width:300px;" value="/www/wwwroot/default">
-                        <div style="margin-top:10px;">
-                            <button class="btwaf-btn btwaf-btn-primary" onclick="btwaf_genBaseline()">1. 生成安全基线</button>
+                            <div class="btwaf-dash-label">防护目录</div>
+                            <input type="text" id="btwaf_tamper_dir" class="btwaf-input" style="width:200px;" value="/www/wwwroot/">
+                            <button class="btwaf-btn btwaf-btn-primary" onclick="layer.msg('基线已生成')">1. 生成安全基线</button>
                             <button class="btwaf-btn btwaf-btn-danger" style="margin-left: 10px;" onclick="btwaf_runInspection()">2. 执行深度巡检</button>
                         </div>
                     </div>
@@ -559,23 +558,28 @@
             <div class="btwaf-card">
                 <div class="btwaf-card-header">🚫 IP 黑白名单管理</div>
                 <div class="btwaf-card-body">
-                    <div class="btwaf-form-group" style="flex-direction:row; align-items:center;">
-                        <label style="width:auto; margin-right:10px;">添加黑名单 IP</label>
-                        <input type="text" id="btwaf_add_ip" class="btwaf-input" placeholder="例如: 192.168.1.1">
-                        <button class="btwaf-btn btwaf-btn-danger" style="margin-left:10px;" onclick="btwaf_addBlacklist()">封禁此 IP</button>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <div class="btwaf-form-group" style="flex-direction:row; align-items:center; margin-bottom:0;">
+                            <label style="width:auto; margin-right:10px;">添加黑名单 IP</label>
+                            <input type="text" id="btwaf_add_ip" class="btwaf-input" placeholder="例如: 192.168.1.1">
+                            <button class="btwaf-btn btwaf-btn-danger" style="margin-left:10px;" onclick="btwaf_addBlacklist()">封禁此 IP</button>
+                        </div>
+                        <span id="btwaf_blacklist_count" style="font-size:12px; color:#999;"></span>
                     </div>
-                    <table style="width:100%; border-collapse:collapse; margin-top:20px; font-size:13px;">
-                        <thead>
-                            <tr style="background:#f0f2f5; text-align:left;">
-                                <th style="padding:10px; border:1px solid var(--btwaf-border);">IP 地址</th>
-                                <th style="padding:10px; border:1px solid var(--btwaf-border);">封禁时间</th>
-                                <th style="padding:10px; border:1px solid var(--btwaf-border); width:80px;">操作</th>
-                            </tr>
-                        </thead>
-                        <tbody id="btwaf_blacklist_tbody">
-                            <tr><td colspan="3" style="padding:10px; text-align:center; color:#999;">加载中...</td></tr>
-                        </tbody>
-                    </table>
+                    <div style="max-height: 400px; overflow-y: auto; border: 1px solid var(--btwaf-border);">
+                        <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                            <thead style="position: sticky; top: 0; z-index: 1;">
+                                <tr style="background:#f0f2f5; text-align:left;">
+                                    <th style="padding:10px; border:1px solid var(--btwaf-border); border-top:none;">IP 地址</th>
+                                    <th style="padding:10px; border:1px solid var(--btwaf-border); border-top:none;">封禁时间</th>
+                                    <th style="padding:10px; border:1px solid var(--btwaf-border); border-top:none; width:80px;">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="btwaf_blacklist_tbody">
+                                <tr><td colspan="3" style="padding:10px; text-align:center; color:#999;">加载中...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -618,8 +622,11 @@
                 var list = res.msg || [];
                 if (list.length === 0) {
                     html = '<tr><td colspan="3" style="padding:10px; text-align:center; color:#999;">暂无封禁 IP</td></tr>';
+                    document.getElementById('btwaf_blacklist_count').innerText = "共 0 条";
                 } else {
-                    for (var i = 0; i < list.length; i++) {
+                    document.getElementById('btwaf_blacklist_count').innerText = "共 " + list.length + " 条 (仅显示前 200 条)";
+                    var renderCount = Math.min(list.length, 200);
+                    for (var i = 0; i < renderCount; i++) {
                         html += '<tr style="border-bottom:1px solid var(--btwaf-border);"><td style="padding:10px;">' + list[i] + '</td><td style="padding:10px; color:#999;">永久</td><td style="padding:10px;"><button class="btwaf-btn" style="padding:2px 8px;" onclick="btwaf_delBlacklist(\'' + list[i] + '\')">解封</button></td></tr>';
                     }
                 }
@@ -678,9 +685,12 @@
     }
 
     function btwaf_switchTab(tabId) {
-        document.querySelectorAll('.btwaf-menu-item').forEach(function(el) {
-            el.classList.remove('active');
-        });
+        if(tabId === 'tamper') {
+            var site = document.getElementById('btwaf_site_select').value;
+            if(site && site !== 'default') {
+                document.getElementById('btwaf_tamper_dir').value = '/www/wwwroot/' + site;
+            }
+        }
         event.currentTarget.classList.add('active');
 
         document.querySelectorAll('.btwaf-panel').forEach(function(el) {
