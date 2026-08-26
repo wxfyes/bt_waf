@@ -37,17 +37,17 @@
         overflow-y: auto;
     }
     
-    .btwaf-main-header {
+    .btwaf-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         flex-wrap: wrap;
         gap: 10px;
-        padding-bottom: 20px;
+        padding: 15px 25px;
         border-bottom: 1px solid var(--btwaf-border);
-        margin-bottom: 20px;
+        background-color: #fff;
     }
-    .btwaf-main-header > div {
+    .btwaf-header > * {
         white-space: nowrap;
         flex-shrink: 0;
     }
@@ -97,21 +97,13 @@
         overflow-y: auto;
     }
 
-    .btwaf-header {
-        padding: 15px 25px;
-        border-bottom: 1px solid var(--btwaf-border);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background-color: #fff;
-    }
-
     .btwaf-header h1 {
         font-size: 18px;
         font-weight: 500;
         margin: 0;
         display: flex;
         align-items: center;
+        white-space: nowrap;
     }
 
     .btwaf-version {
