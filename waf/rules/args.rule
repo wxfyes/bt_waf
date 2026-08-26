@@ -2,8 +2,10 @@
 \b(select|update|delete|insert|drop|alter)\b\s+.*\b(from|into|where|set)\b
 \b(union|select)\b\s+.*\b(from|into)\b
 \b(exec|execute|sp_executesql)\b
-\b(and|or)\b\s+.*(1\s*=\s*1|1\s*=\s*2|'1'\s*=\s*'1'|"1"\s*=\s*"1")
-
+\b(and|or)\b\s+.*(1\s*=\s*1|1\s*=\s*2)
+\b(and|or)\b\s+.*(['"])(.+?)\2\s*=\s*\2\3\2
+\b(and|or)\b\s+.*(char|ascii|substring|substr|mid|sleep|benchmark)\b
+\b(and|or)\b\s+['"\w]+\s*=\s*['"\w]+
 # 常见 RCE (动态函数)
 \b(eval|assert|system|exec|shell_exec|passthru|popen|proc_open)\b\s*\(
 \b(file_get_contents|file_put_contents)\b\s*\(
