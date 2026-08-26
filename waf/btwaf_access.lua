@@ -116,7 +116,7 @@ end
 -- ================= 主防御逻辑 ================= --
 
 -- 【静态资源放行】直接放行图片、样式、脚本等，避免浪费 CPU 及误触 CC 频率限制
-if ngx.re.match(ngx.var.uri, "\\.(css|js|jpg|jpeg|png|gif|ico|woff|woff2|ttf|svg|eot|mp4|avi|mp3|zip|rar|gz|7z)$", "ijo") then
+if ngx.re.match(ngx.var.uri, "\\.(css|js|jpg|jpeg|png|gif|ico|woff|woff2|ttf|svg|eot|mp4|avi|mp3|zip|rar|gz|7z)$", "io") then
     return
 end
 
@@ -149,13 +149,11 @@ if not ua or ua == "" then
     return
 end
 
--- ================= 框架级特殊放行 ================= --
-if site_framework == "v2board" then
-    -- V2Board/Xboard 专属放行逻辑（API 订阅与服务端节点通信免死金牌）
-    -- 必须在扫描器 UA 检测之前，因为节点和订阅客户端经常使用 go-http-client 或 Clash/Surge 等易被误杀的 UA
-    if string.find(req_uri, "/api/v1/client/") or string.find(req_uri, "/api/v1/server/") or string.find(req_uri, "/api/clients/") or string.find(req_uri, "/api/v1/guest/") or string.find(req_uri, "/ktelie/") or string.find(req_uri, "webhook") then
-        return
-    end
+-- ================= 全局服务通信白名单 ================= --
+-- V2Board/Xboard/各种探针 专属放行逻辑（API 订阅与服务端节点通信免死金牌）
+-- 必须在扫描器 UA 检测之前，因为节点和订阅客户端经常使用 go-http-client 或 Clash/Surge 等易被误杀的 UA
+if string.find(req_uri, "/api/v1/client/") or string.find(req_uri, "/api/v1/server/") or string.find(req_uri, "/api/clients/") or string.find(req_uri, "/api/v1/guest/") or string.find(req_uri, "/ktelie/") or string.find(req_uri, "webhook") then
+    return
 end
 
 -- 0.6 恶意扫描器 User-Agent 检测
