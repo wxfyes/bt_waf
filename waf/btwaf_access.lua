@@ -151,9 +151,9 @@ end
 
 -- ================= 框架级特殊放行 ================= --
 if site_framework == "v2board" then
-    -- V2Board 专属放行逻辑（API 订阅与服务端节点通信免死金牌）
+    -- V2Board/Xboard 专属放行逻辑（API 订阅与服务端节点通信免死金牌）
     -- 必须在扫描器 UA 检测之前，因为节点和订阅客户端经常使用 go-http-client 或 Clash/Surge 等易被误杀的 UA
-    if string.find(req_uri, "/api/v1/client/subscribe") or string.find(req_uri, "/api/v1/server/") or string.find(req_uri, "/ktelie/verxcen/cliuekub/siktdlext") or string.find(req_uri, "/telegram/webhook") or string.find(req_uri, "/security/webhook") then
+    if string.find(req_uri, "/api/v1/client/") or string.find(req_uri, "/api/v1/server/") or string.find(req_uri, "/api/clients/") or string.find(req_uri, "/api/v1/guest/") or string.find(req_uri, "/ktelie/") or string.find(req_uri, "webhook") then
         return
     end
 end
