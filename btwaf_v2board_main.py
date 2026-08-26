@@ -102,6 +102,7 @@ class btwaf_v2board_main:
         cc_rate = 30
         geoip_enable = "off"
         geoip_regions = "CN"
+        threat_enable = "off"
         config_file = "/www/server/nginx/conf/waf/btwaf_init.lua"
         if os.path.exists(config_file):
             try:
@@ -115,6 +116,8 @@ class btwaf_v2board_main:
                         cc_enable = "off"
                     if 'geoip_enable = "on"' in content:
                         geoip_enable = "on"
+                    if 'threat_enable = "on"' in content:
+                        threat_enable = "on"
                     import re
                     match = re.search(r'cc_rate\s*=\s*([0-9]+)', content)
                     if match:
@@ -147,6 +150,7 @@ class btwaf_v2board_main:
             "cc_rate": cc_rate,
             "geoip_enable": geoip_enable,
             "geoip_regions": geoip_regions,
+            "threat_enable": threat_enable,
             "blockedCount": blocked_count
         })
 
@@ -171,6 +175,11 @@ class btwaf_v2board_main:
         self._write_lua_config("geoip_regions", regions, True)
         public.ExecShell("/etc/init.d/nginx reload")
         return public.returnMsg(True, "GeoIP 配置已保存并应用至底层规则。")
+
+    def set_threat_intel(self, args):
+        enable = getattr(args, 'enable', 'off')
+        self._write_lua_config("threat_enable", enable, True)
+        return public.returnMsg(True, "威胁情报订阅设置已保存")
 
     def update_threat_intel(self, args):
         import urllib.request

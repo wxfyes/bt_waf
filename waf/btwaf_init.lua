@@ -24,6 +24,9 @@ local config = {
     geoip_enable = "off",        -- GeoIP 开关
     geoip_regions = "CN",        -- 允许的国家代码
     
+    -- 威胁情报
+    threat_enable = "off",       -- 威胁情报订阅开关
+    
     -- 缓存机制 (用于记录 IP 评分)
     -- 注意: 需要在 nginx http 段配置 lua_shared_dict btwaf_ip_scores 10m;
 }

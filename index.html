@@ -333,7 +333,7 @@
                         </div>
                         <div class="btwaf-dash-item">
                             <div class="btwaf-dash-label">威胁情报</div>
-                            <div class="btwaf-dash-val">关闭</div>
+                            <div class="btwaf-dash-val" id="dash_threat_waf">获取中...</div>
                         </div>
                         <div class="btwaf-dash-item">
                             <div class="btwaf-dash-label">今日硬封禁 IP</div>
@@ -663,7 +663,11 @@
     }
 
     function btwaf_saveThreat() {
-        layer.msg('订阅设置已保存。', {icon: 1});
+        var enable = document.getElementById('btwaf_threat_enable').value;
+        btwaf_api('set_threat_intel', {enable: enable}, function(res) {
+            layer.msg(res.msg, {icon: res.status ? 1 : 2});
+            if(res.status) btwaf_loadDashboard();
+        });
     }
 
     function btwaf_updateThreat() {
@@ -743,6 +747,23 @@
                 document.getElementById('dash_cc_waf').style.color = ccOn ? 'var(--btwaf-primary)' : 'var(--btwaf-text-muted)';
                 document.getElementById('btwaf_cc_enable').value = d.cc_enable || 'on';
                 document.getElementById('btwaf_cc_rate').value = d.cc_rate || '30';
+
+                // Update GeoIP UI
+                var geoOn = (d.geoip_enable === 'on');
+                document.getElementById('btwaf_geoip_enable').value = d.geoip_enable || 'off';
+                if (d.geoip_regions) {
+                    var regions = d.geoip_regions.split(',');
+                    document.querySelectorAll('input[id^="geoip_"]').forEach(function(cb) {
+                        var code = cb.id.replace('geoip_', '').toUpperCase();
+                        cb.checked = regions.indexOf(code) !== -1;
+                    });
+                }
+                
+                // Update Threat UI
+                var threatOn = (d.threat_enable === 'on');
+                document.getElementById('dash_threat_waf').innerText = threatOn ? '开启' : '关闭';
+                document.getElementById('dash_threat_waf').style.color = threatOn ? 'var(--btwaf-primary)' : 'var(--btwaf-text-muted)';
+                document.getElementById('btwaf_threat_enable').value = d.threat_enable || 'off';
             }
         });
     }
