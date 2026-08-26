@@ -16,7 +16,6 @@
         height: 750px;
         width: 100%;
         max-width: 1400px;
-        min-width: 1100px;
         margin: 0 auto;
         background-color: var(--btwaf-bg);
         color: var(--btwaf-text);
@@ -219,6 +218,28 @@
         overflow-y: auto;
         white-space: pre-wrap;
         line-height: 1.5;
+    }
+
+    /* 中小屏幕适配 (宝塔默认弹窗大概 700-800px) */
+    @media (max-width: 950px) {
+        .btwaf-dash-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        .btwaf-form-group {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .btwaf-form-group label {
+            margin-bottom: 5px;
+            width: auto;
+        }
+        .btwaf-form-group .btwaf-btn {
+            margin-top: 10px;
+            margin-left: 0 !important;
+        }
+        .btwaf-sidebar {
+            width: 160px;
+        }
     }
 
     /* 移动端适配 */
@@ -567,26 +588,25 @@
     setTimeout(function() {
         try {
             var p = window.parent;
-            var w = 1050; // 宽度
-            var left = (p.innerWidth - w) / 2;
-            
+            var w = 1050; // 期望宽度
             // 尝试 1：原生 Layer API
             var idx = p.layer.getFrameIndex(window.name);
             if (idx) {
+                var left = (p.innerWidth - w) / 2;
                 p.layer.style(idx, { width: w + 'px', left: left + 'px' });
             }
-            
             // 尝试 2：直接操作 DOM
             if (p.$) {
                 var $layer = p.$('#layui-layer' + idx);
-                $layer.css({ 'width': w + 'px', 'left': left + 'px' });
-                $layer.find('.layui-layer-title').css('width', '100%');
+                var curW = $layer.width();
+                if (curW < w) {
+                    var $layerLeft = (p.innerWidth - w) / 2;
+                    $layer.css({ 'width': w + 'px', 'left': $layerLeft + 'px' });
+                    $layer.find('.layui-layer-title').css('width', '100%');
+                }
             }
         } catch(e) {}
     }, 200);
-    
-    // 自身兜底宽度
-    document.body.style.minWidth = '1000px';
 
     var btwaf_current_site = "";
 
