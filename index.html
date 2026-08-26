@@ -13,7 +13,10 @@
 
     .btwaf-wrap {
         display: flex;
-        height: 700px;
+        height: 750px;
+        width: 100%;
+        max-width: 1400px;
+        margin: 0 auto;
         background-color: var(--btwaf-bg);
         color: var(--btwaf-text);
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -26,7 +29,7 @@
     }
 
     .btwaf-sidebar {
-        width: 180px;
+        width: 200px;
         background-color: var(--btwaf-sidebar-bg);
         border-right: 1px solid var(--btwaf-border);
         display: flex;
@@ -38,7 +41,7 @@
         padding: 20px 15px 10px;
         font-weight: bold;
         color: #666;
-        font-size: 13px;
+        font-size: 14px;
         border-bottom: 1px solid var(--btwaf-border);
         margin-bottom: 10px;
     }
@@ -216,6 +219,33 @@
         white-space: pre-wrap;
         line-height: 1.5;
     }
+
+    /* 移动端适配 */
+    @media (max-width: 768px) {
+        .btwaf-wrap {
+            flex-direction: column;
+            height: auto;
+        }
+        .btwaf-sidebar {
+            width: 100%;
+            height: 150px;
+            border-right: none;
+            border-bottom: 1px solid var(--btwaf-border);
+        }
+        .btwaf-main-content {
+            height: 650px;
+        }
+        .btwaf-dash-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        .btwaf-form-group {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .btwaf-form-group label {
+            margin-bottom: 5px;
+        }
+    }
 </style>
 
 <div class="btwaf-wrap">
@@ -226,10 +256,10 @@
             <span class="btwaf-menu-icon">🛡️</span>安全总览
         </div>
         <div class="btwaf-menu-item" onclick="btwaf_switchTab('honeypot')">
-            <span class="btwaf-menu-icon">🍯</span>蜜罐防御 <span style="font-size:10px; color:#999; margin-left:5px;">(未开启)</span>
+            <span class="btwaf-menu-icon">🍯</span>蜜罐防御
         </div>
         <div class="btwaf-menu-item" onclick="btwaf_switchTab('cc')">
-            <span class="btwaf-menu-icon">⚡</span>CC 防御 <span style="font-size:10px; color:#999; margin-left:5px;">(未开启)</span>
+            <span class="btwaf-menu-icon">⚡</span>CC 防御
         </div>
         <div class="btwaf-menu-item" onclick="btwaf_switchTab('logs')">
             <span class="btwaf-menu-icon">🚨</span>实时告警
@@ -269,15 +299,15 @@
                     <div class="btwaf-dash-grid">
                         <div class="btwaf-dash-item">
                             <div class="btwaf-dash-label">全局 WAF 引擎</div>
-                            <div class="btwaf-dash-val" id="dash_global_waf" style="color:var(--btwaf-primary);">开启</div>
+                            <div class="btwaf-dash-val" id="dash_global_waf" style="color:var(--btwaf-primary);">获取中...</div>
                         </div>
                         <div class="btwaf-dash-item">
                             <div class="btwaf-dash-label">蜜罐 (Tarpit)</div>
-                            <div class="btwaf-dash-val" style="color:var(--btwaf-primary);">默认开启</div>
+                            <div class="btwaf-dash-val" id="dash_hp_waf" style="color:var(--btwaf-primary);">获取中...</div>
                         </div>
                         <div class="btwaf-dash-item">
                             <div class="btwaf-dash-label">CC 防御</div>
-                            <div class="btwaf-dash-val" style="color:var(--btwaf-primary);">强制拦截</div>
+                            <div class="btwaf-dash-val" id="dash_cc_waf" style="color:var(--btwaf-primary);">获取中...</div>
                         </div>
                         <div class="btwaf-dash-item">
                             <div class="btwaf-dash-label">威胁情报</div>
@@ -298,8 +328,8 @@
             <div class="btwaf-card">
                 <div class="btwaf-card-header">站点防御链注入</div>
                 <div class="btwaf-card-body">
-                    <div class="btwaf-form-group">
-                        <label>选择站点</label>
+                    <div class="btwaf-form-group" style="flex-direction:row; align-items:center;">
+                        <label style="width:auto; margin-right:10px;">选择站点</label>
                         <select id="btwaf_site_select" class="btwaf-select" onchange="btwaf_checkStatus()">
                             <option value="default">请选择站点...</option>
                         </select>
@@ -319,6 +349,53 @@
                     <button class="btwaf-btn btwaf-btn-primary" onclick="btwaf_toggleGlobal('on')">启用全局防御</button>
                     <button class="btwaf-btn btwaf-btn-danger" style="margin-left:10px;" onclick="btwaf_toggleGlobal('off')">关闭全局防御</button>
                     <button class="btwaf-btn" style="margin-left:10px;" onclick="btwaf_reloadNginx()">强制重载 Nginx</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 面板：蜜罐防御 -->
+        <div id="btwaf_panel_honeypot" class="btwaf-panel">
+            <div class="btwaf-card">
+                <div class="btwaf-card-header">🍯 蜜罐诱饵与主动反扫描</div>
+                <div class="btwaf-card-body">
+                    <p style="color:#666; font-size:13px; margin-bottom: 20px;">
+                        【防测绘杀手锏】：蜜罐启用后，当攻击者触发任意 WAF 规则时，连接将被重定向至焦油坑 (Tarpit) 黑洞，强制对方维持 TCP 连接直到超时，严重拖垮扫描器性能。
+                    </p>
+                    <div class="btwaf-form-group" style="flex-direction:row;">
+                        <label>防御状态:</label>
+                        <span id="btwaf_honeypot_status" style="font-weight:bold; color:var(--btwaf-text-muted);">请先在安全总览选择站点检查状态...</span>
+                    </div>
+                    <div class="btwaf-form-group" style="flex-direction:row;">
+                        <label>封禁策略:</label>
+                        <span style="font-size:13px; color:#52c41a;">Tarpit 资源消耗惩罚机制</span>
+                    </div>
+                    <button class="btwaf-btn" style="background:#52c41a; color:#fff; border:none;" onclick="btwaf_setHoneypot('tarpit')">启用蜜罐 (Tarpit)</button>
+                    <button class="btwaf-btn btwaf-btn-danger" style="margin-left:10px;" onclick="btwaf_setHoneypot('block')">关闭蜜罐 (降级为普通拦截)</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 面板：CC 防御 -->
+        <div id="btwaf_panel_cc" class="btwaf-panel">
+            <div class="btwaf-card">
+                <div class="btwaf-card-header">⚡ CC 攻击高级防御</div>
+                <div class="btwaf-card-body">
+                    <p style="color:#666; font-size:13px; margin-bottom: 20px;">
+                        基于 Lua 内存字典的高性能速率限制引擎。当单 IP 访问频率超过阈值时，直接在内核层丢弃 (DROP) 连接，完美防御大流量 CC 攻击。
+                    </p>
+                    <div class="btwaf-form-group" style="flex-direction:row;">
+                        <label>防御开关</label>
+                        <select id="btwaf_cc_enable" class="btwaf-select">
+                            <option value="on">开启防御</option>
+                            <option value="off">关闭防御</option>
+                        </select>
+                    </div>
+                    <div class="btwaf-form-group" style="flex-direction:row;">
+                        <label>频率阈值</label>
+                        <input type="number" id="btwaf_cc_rate" class="btwaf-input" style="width:100px;" value="30">
+                        <span style="margin-left:10px; font-size:13px; color:#666;">次 / 10秒 (默认 30)</span>
+                    </div>
+                    <button class="btwaf-btn btwaf-btn-primary" onclick="btwaf_saveCC()">保存 CC 配置并生效</button>
                 </div>
             </div>
         </div>
@@ -347,8 +424,10 @@
                     <div class="btwaf-form-group">
                         <label>防护目录</label>
                         <input type="text" id="btwaf_baseline_path" class="btwaf-input" style="width:300px;" value="/www/wwwroot/default">
-                        <button class="btwaf-btn btwaf-btn-primary" style="margin-left: 10px;" onclick="btwaf_genBaseline()">1. 生成安全基线</button>
-                        <button class="btwaf-btn btwaf-btn-danger" style="margin-left: 10px;" onclick="btwaf_runInspection()">2. 执行深度巡检</button>
+                        <div style="margin-top:10px;">
+                            <button class="btwaf-btn btwaf-btn-primary" onclick="btwaf_genBaseline()">1. 生成安全基线</button>
+                            <button class="btwaf-btn btwaf-btn-danger" style="margin-left: 10px;" onclick="btwaf_runInspection()">2. 执行深度巡检</button>
+                        </div>
                     </div>
                     <pre style="background:#f5f5f5; padding:15px; border-radius:4px;" id="btwaf_tamper_result">准备就绪。</pre>
                 </div>
@@ -363,7 +442,7 @@
                     <p style="color:#666; font-size:13px; margin-bottom: 20px;">
                         为了防止 WAF 误杀正常的业务请求（如 Telegram Webhook，后端节点通信），请为您的站点选择正确的框架模型。
                     </p>
-                    <div class="btwaf-form-group">
+                    <div class="btwaf-form-group" style="flex-direction:row;">
                         <label>适配框架</label>
                         <select id="btwaf_framework_select" class="btwaf-select">
                             <option value="v2board">V2Board (机场专属免死金牌)</option>
@@ -393,12 +472,6 @@
         </div>
 
         <!-- 其他开发中面板的占位符 -->
-        <div id="btwaf_panel_honeypot" class="btwaf-panel">
-            <div class="btwaf-card"><div class="btwaf-card-body">蜜罐防御配置面板即将上线 (Phase 2)...</div></div>
-        </div>
-        <div id="btwaf_panel_cc" class="btwaf-panel">
-            <div class="btwaf-card"><div class="btwaf-card-body">CC 防御高级配置面板即将上线 (Phase 2)...</div></div>
-        </div>
         <div id="btwaf_panel_geoip" class="btwaf-panel">
             <div class="btwaf-card"><div class="btwaf-card-body">GeoIP 地区封锁面板即将上线 (Phase 3)...</div></div>
         </div>
@@ -406,7 +479,7 @@
             <div class="btwaf-card"><div class="btwaf-card-body">威胁情报订阅面板即将上线 (Phase 3)...</div></div>
         </div>
         <div id="btwaf_panel_blacklist" class="btwaf-panel">
-            <div class="btwaf-card"><div class="btwaf-card-body">自定义 IP 黑白名单管理即将上线 (Phase 2)...</div></div>
+            <div class="btwaf-card"><div class="btwaf-card-body">自定义 IP 黑白名单管理即将上线 (Phase 3)...</div></div>
         </div>
 
     </div>
@@ -438,7 +511,7 @@
                 try { res = JSON.parse(res); } catch(e) {}
             }
             if (callback) callback(res);
-            else if (res.msg) layer.msg(res.msg, {icon: res.status ? 1 : 2});
+            else if (res && res.msg) layer.msg(res.msg, {icon: res.status ? 1 : 2});
         });
     }
 
@@ -470,6 +543,20 @@
                 document.getElementById('dash_global_waf').innerText = (d.global_enable === 'on' ? '开启' : '关闭');
                 document.getElementById('dash_global_waf').style.color = (d.global_enable === 'on' ? 'var(--btwaf-primary)' : 'var(--btwaf-danger)');
                 document.getElementById('dash_event_count').innerText = d.blockedCount + " 次";
+                
+                // Update Honeypot UI
+                var hpOn = (d.drop_action === 'tarpit');
+                document.getElementById('dash_hp_waf').innerText = hpOn ? '开启' : '关闭';
+                document.getElementById('dash_hp_waf').style.color = hpOn ? 'var(--btwaf-primary)' : 'var(--btwaf-text-muted)';
+                document.getElementById('btwaf_honeypot_status').innerText = hpOn ? '已开启 (Tarpit 惩罚)' : '已关闭 (降级为普通拦截)';
+                document.getElementById('btwaf_honeypot_status').style.color = hpOn ? '#52c41a' : '#f5222d';
+
+                // Update CC UI
+                var ccOn = (d.cc_enable === 'on');
+                document.getElementById('dash_cc_waf').innerText = ccOn ? ('开启 (' + (d.cc_rate || 30) + '/10s)') : '关闭';
+                document.getElementById('dash_cc_waf').style.color = ccOn ? 'var(--btwaf-primary)' : 'var(--btwaf-text-muted)';
+                document.getElementById('btwaf_cc_enable').value = d.cc_enable || 'on';
+                document.getElementById('btwaf_cc_rate').value = d.cc_rate || '30';
             }
         });
     }
@@ -484,7 +571,7 @@
         btwaf_api('get_status', {siteName: site}, function(res) {
             if(res && res.status) {
                 var html = `
-                    <div style="display:flex; gap: 30px;">
+                    <div style="display:flex; flex-wrap:wrap; gap: 30px;">
                         <div>当前站点：<b>${res.msg.siteName}</b></div>
                         <div>注入状态：<b style="color:${res.msg.inject_status==='已受保护'?'#52c41a':'#f5222d'}">${res.msg.inject_status}</b></div>
                         <div>底层引擎文件：<b>${res.msg.lua_status}</b></div>
@@ -535,6 +622,26 @@
         });
     }
 
+    function btwaf_setHoneypot(action) {
+        btwaf_api('set_honeypot', {action: action}, function(res) {
+            layer.msg(res.msg, {icon: res.status ? 1 : 2});
+            if(res.status) {
+                btwaf_loadDashboard();
+            }
+        });
+    }
+
+    function btwaf_saveCC() {
+        var enable = document.getElementById('btwaf_cc_enable').value;
+        var rate = document.getElementById('btwaf_cc_rate').value;
+        btwaf_api('set_cc_config', {enable: enable, rate: rate}, function(res) {
+            layer.msg(res.msg, {icon: res.status ? 1 : 2});
+            if(res.status) {
+                btwaf_loadDashboard();
+            }
+        });
+    }
+
     function btwaf_reloadNginx() {
         btwaf_api('reload_nginx', {}, function(res) {
             layer.msg(res.msg, {icon: 1});
@@ -544,7 +651,7 @@
     function btwaf_loadLogs() {
         document.getElementById('btwaf_log_viewer').innerText = "加载中...";
         btwaf_api('get_logs', {}, function(res) {
-            document.getElementById('btwaf_log_viewer').innerText = res.status ? res.msg : "暂无日志。";
+            document.getElementById('btwaf_log_viewer').innerText = (res && res.status) ? res.msg : "暂无日志。";
         });
     }
 

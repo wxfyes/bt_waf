@@ -32,6 +32,40 @@ class btwaf_v2board_main:
         self.nginx_conf_path = "/www/server/nginx/conf/nginx.conf"
         self.waf_rules_dir = "/www/server/nginx/conf/waf"
         self.baseline_file = f"{self.plugin_path}/hash_baseline.json"
+        self.init_lua_path = "/www/server/nginx/conf/waf/btwaf_init.lua"
+
+    def _read_lua_config(self):
+        if not os.path.exists(self.init_lua_path):
+            return {}
+        with open(self.init_lua_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        
+        cfg = {}
+        for line in content.split('\n'):
+            line = line.strip()
+            if not line or line.startswith('--'):
+                continue
+            import re
+            match = re.search(r'([a-zA-Z0-9_]+)\s*=\s*[\"\']?([^\r\n\"\',]+)[\"\']?', line)
+            if match:
+                cfg[match.group(1)] = match.group(2)
+        return cfg
+
+    def _write_lua_config(self, key, value, is_string=True):
+        if not os.path.exists(self.init_lua_path):
+            return False
+        with open(self.init_lua_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+            
+        import re
+        if is_string:
+            new_content = re.sub(fr'{key}\s*=\s*\"[^\"]*\"', f'{key} = \"{value}\"', content)
+        else:
+            new_content = re.sub(fr'{key}\s*=\s*[0-9]+', f'{key} = {value}', content)
+            
+        with open(self.init_lua_path, 'w', encoding='utf-8') as f:
+            f.write(new_content)
+        return True
 
     def get_sites(self, args=None):
         try:
@@ -63,6 +97,9 @@ class btwaf_v2board_main:
             lua_status_msg = "已更新 (包含最新探针)"
             
         global_enable = "on"
+        drop_action = "block"
+        cc_enable = "on"
+        cc_rate = 30
         config_file = "/www/server/nginx/conf/waf/btwaf_init.lua"
         if os.path.exists(config_file):
             try:
@@ -70,6 +107,14 @@ class btwaf_v2board_main:
                     content = f.read()
                     if 'waf_enable = "off"' in content:
                         global_enable = "off"
+                    if 'drop_action = "tarpit"' in content:
+                        drop_action = "tarpit"
+                    if 'cc_enable = "off"' in content:
+                        cc_enable = "off"
+                    import re
+                    match = re.search(r'cc_rate\s*=\s*([0-9]+)', content)
+                    if match:
+                        cc_rate = int(match.group(1))
             except:
                 pass
                 
@@ -90,8 +135,25 @@ class btwaf_v2board_main:
             "inject_status": status_msg,
             "lua_status": lua_status_msg,
             "global_enable": global_enable,
+            "drop_action": drop_action,
+            "cc_enable": cc_enable,
+            "cc_rate": cc_rate,
             "blockedCount": blocked_count
         })
+
+    def set_honeypot(self, args):
+        action = getattr(args, 'action', 'block')
+        self._write_lua_config("drop_action", action, True)
+        public.ExecShell("/etc/init.d/nginx reload")
+        return public.returnMsg(True, f"蜜罐防御已{'开启' if action=='tarpit' else '关闭'}")
+
+    def set_cc_config(self, args):
+        enable = getattr(args, 'enable', 'on')
+        rate = getattr(args, 'rate', '30')
+        self._write_lua_config("cc_enable", enable, True)
+        self._write_lua_config("cc_rate", rate, False)
+        public.ExecShell("/etc/init.d/nginx reload")
+        return public.returnMsg(True, "CC 防御配置已保存并生效")
 
     def save_framework(self, args):
         framework = getattr(args, 'framework', 'v2board')
@@ -243,25 +305,11 @@ class btwaf_v2board_main:
         return public.returnMsg(True, "Nginx 已成功重载！")
 
     def toggle_waf(self, args):
-        """全局防御总开关 (控制 waf_enable)"""
-        waf_action = getattr(args, 'waf_action', 'on') # 'on' 或 'off'
-        config_file = "/www/server/nginx/conf/waf/btwaf_init.lua"
-        if not os.path.exists(config_file):
-            return public.returnMsg(False, "WAF 尚未安装或配置文件丢失。")
-            
+        """全局防御总开关"""
         try:
-            with open(config_file, 'r', encoding='utf-8') as f:
-                content = f.read()
-                
-            import re
-            new_content = re.sub(r'waf_enable\s*=\s*"[^"]*"', f'waf_enable = "{waf_action}"', content)
-            
-            with open(config_file, 'w', encoding='utf-8') as f:
-                f.write(new_content)
-                
-            # 重载使 Lua 配置生效
+            waf_action = getattr(args, 'waf_action', 'on')
+            self._write_lua_config("waf_enable", waf_action, True)
             public.ExecShell("/etc/init.d/nginx reload")
-            
             status_text = "开启" if waf_action == "on" else "关闭"
             return public.returnMsg(True, f"全局防火墙已{status_text}！")
         except Exception as e:

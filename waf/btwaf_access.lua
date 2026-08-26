@@ -118,19 +118,32 @@ end
 
 local site_framework = ngx.var.btwaf_framework or config.framework or "general"
 
--- 0. CC 攻击频率检测 (每秒请求数限制)
-local cc_dict = ngx.shared.btwaf_ip_scores
-if cc_dict then
-    local req_count, err = cc_dict:get(client_ip)
-    if req_count then
-        if req_count > 50 then -- 1秒内超过50次请求直接判定为 CC
-            trigger_penalty("CC Attack", "High Frequency")
+-- 0. IP 黑名单检测
+if _G.waf_rules.blacklist then
+    local rules = _G.waf_rules.blacklist
+    for _, rule in ipairs(rules) do
+        if client_ip == rule then
+            trigger_penalty("IP Blacklist", rule)
             return
-        else
-            cc_dict:incr(client_ip, 1)
         end
-    else
-        cc_dict:set(client_ip, 1, 1) -- 1秒过期时间
+    end
+end
+
+-- 0.5 CC 攻击频率检测
+if config.cc_enable == "on" then
+    local cc_dict = ngx.shared.btwaf_ip_scores
+    if cc_dict then
+        local req_count, err = cc_dict:get(client_ip)
+        if req_count then
+            if req_count > (tonumber(config.cc_rate) or 30) then
+                trigger_penalty("CC Attack", "High Frequency")
+                return
+            else
+                cc_dict:incr(client_ip, 1)
+            end
+        else
+            cc_dict:set(client_ip, 1, 10) -- 10秒一个统计周期
+        end
     end
 end
 

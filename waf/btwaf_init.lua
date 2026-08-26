@@ -16,8 +16,12 @@ local config = {
     check_cookie = "on",         -- 检查 Cookie
     check_upload = "on",         -- 检查文件上传 (防图片马)
     
+    -- CC 防御
+    cc_enable = "on",            -- CC 防御开关
+    cc_rate = 30,                -- CC 频率限制 (次/10秒)
+    
     -- 缓存机制 (用于记录 IP 评分)
-    -- 注意: 需要在 nginx http 段配置 lua_shared_dict waf_ip_scores 10m;
+    -- 注意: 需要在 nginx http 段配置 lua_shared_dict btwaf_ip_scores 10m;
 }
 
 -- 加载规则库的通用函数
@@ -31,7 +35,7 @@ local function load_rules(rule_file)
     local content = file:read("*a")
     file:close()
     
-    -- 简单按行分割作为正则规则 (实际开发可引入 cjson 解析更复杂的格式)
+    -- 简单按行分割作为正则规则
     local rules = {}
     for line in string.gmatch(content, "[^\r\n]+") do
         if line ~= "" and not string.match(line, "^#") then
@@ -47,7 +51,8 @@ _G.waf_rules = {
     post = load_rules("post.rule"),
     cookie = load_rules("cookie.rule"),
     user_agent = load_rules("user_agent.rule"),
-    v2board = load_rules("v2board.rule") -- 专属适配规则
+    v2board = load_rules("v2board.rule"), -- 专属适配规则
+    blacklist = load_rules("blacklist.rule") -- IP 黑名单
 }
 _G.waf_config = config
 
