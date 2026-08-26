@@ -37,6 +37,21 @@
         overflow-y: auto;
     }
     
+    .btwaf-main-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--btwaf-border);
+        margin-bottom: 20px;
+    }
+    .btwaf-main-header > div {
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
     .btwaf-sidebar-header {
         padding: 20px 15px 10px;
         font-weight: bold;
@@ -188,14 +203,27 @@
 
     .btwaf-form-group {
         display: flex;
+        flex-direction: row;
         align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
         margin-bottom: 15px;
     }
-
     .btwaf-form-group label {
-        width: 100px;
-        font-size: 14px;
+        width: auto;
+        min-width: 100px;
+        font-weight: bold;
         color: var(--btwaf-text);
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+    .btwaf-form-group .btwaf-input, .btwaf-form-group .btwaf-select {
+        flex: 1;
+        min-width: 150px;
+    }
+    .btwaf-form-group .btwaf-btn {
+        flex-shrink: 0;
+        margin-left: 0 !important;
     }
 
     .btwaf-select, .btwaf-input {
@@ -444,11 +472,12 @@
                 <div class="btwaf-card-header">文件完整性防篡改系统</div>
                 <div class="btwaf-card-body">
                     <div class="btwaf-form-group">
-                            <div class="btwaf-dash-label">防护目录</div>
-                            <input type="text" id="btwaf_tamper_dir" class="btwaf-input" style="width:200px;" value="/www/wwwroot/">
-                            <button class="btwaf-btn btwaf-btn-primary" onclick="layer.msg('基线已生成')">1. 生成安全基线</button>
-                            <button class="btwaf-btn btwaf-btn-danger" style="margin-left: 10px;" onclick="btwaf_runInspection()">2. 执行深度巡检</button>
-                        </div>
+                        <label style="margin-right: 10px;">防护目录</label>
+                        <select id="btwaf_tamper_site" class="btwaf-select">
+                            <option value="default">请选择站点...</option>
+                        </select>
+                        <button class="btwaf-btn btwaf-btn-primary" onclick="layer.msg('基线已生成')">1. 生成安全基线</button>
+                        <button class="btwaf-btn btwaf-btn-danger" onclick="btwaf_runInspection()">2. 执行深度巡检</button>
                     </div>
                     <pre style="background:#f5f5f5; padding:15px; border-radius:4px;" id="btwaf_tamper_result">准备就绪。</pre>
                 </div>
@@ -558,13 +587,13 @@
             <div class="btwaf-card">
                 <div class="btwaf-card-header">🚫 IP 黑白名单管理</div>
                 <div class="btwaf-card-body">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                        <div class="btwaf-form-group" style="flex-direction:row; align-items:center; margin-bottom:0;">
-                            <label style="width:auto; margin-right:10px;">添加黑名单 IP</label>
+                    <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; margin-bottom:15px; gap: 10px;">
+                        <div class="btwaf-form-group" style="margin-bottom:0;">
+                            <label style="margin-right:10px;">添加黑名单 IP</label>
                             <input type="text" id="btwaf_add_ip" class="btwaf-input" placeholder="例如: 192.168.1.1">
-                            <button class="btwaf-btn btwaf-btn-danger" style="margin-left:10px;" onclick="btwaf_addBlacklist()">封禁此 IP</button>
+                            <button class="btwaf-btn btwaf-btn-danger" onclick="btwaf_addBlacklist()">封禁此 IP</button>
                         </div>
-                        <span id="btwaf_blacklist_count" style="font-size:12px; color:#999;"></span>
+                        <span id="btwaf_blacklist_count" style="font-size:12px; color:#999; white-space:nowrap; flex-shrink:0;"></span>
                     </div>
                     <div style="max-height: 400px; overflow-y: auto; border: 1px solid var(--btwaf-border);">
                         <table style="width:100%; border-collapse:collapse; font-size:13px;">
@@ -685,12 +714,9 @@
     }
 
     function btwaf_switchTab(tabId) {
-        if(tabId === 'tamper') {
-            var site = document.getElementById('btwaf_site_select').value;
-            if(site && site !== 'default') {
-                document.getElementById('btwaf_tamper_dir').value = '/www/wwwroot/' + site;
-            }
-        }
+        document.querySelectorAll('.btwaf-menu-item').forEach(function(el) {
+            el.classList.remove('active');
+        });
         event.currentTarget.classList.add('active');
 
         document.querySelectorAll('.btwaf-panel').forEach(function(el) {
@@ -720,12 +746,22 @@
             if (typeof res === 'string') {
                 try { res = JSON.parse(res); } catch(e) {}
             }
-            if (res && res.status) {
-                var options = '<option value="default">请选择站点...</option>';
+            if (res && res.status && res.msg.length > 0) {
+                var options = '';
                 for (var i = 0; i < res.msg.length; i++) {
                     options += '<option value="' + res.msg[i] + '">' + res.msg[i] + '</option>';
                 }
                 document.getElementById('btwaf_site_select').innerHTML = options;
+                
+                var tamperSelect = document.getElementById('btwaf_tamper_site');
+                if (tamperSelect) {
+                    tamperSelect.innerHTML = options;
+                }
+                
+                // Auto load dashboard
+                btwaf_loadDashboard();
+            } else {
+                document.getElementById('btwaf_site_select').innerHTML = '<option value="default">无站点</option>';
             }
         });
     }
