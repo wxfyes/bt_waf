@@ -665,8 +665,55 @@
 </div>
 
 <script>
-    // 移除强行拉伸的 JS (解决拖拽乱飘、关闭按钮隐藏的 bug)
+    // --- 宝塔面板专属 UI 强制自适应适配 (终极版 API 模式) ---
+    setTimeout(function() {
+        try {
+            var tWin = window.top || window.parent || window;
+            
+            // 获取真实大屏宽高，绝不被内嵌小框误导
+            var pW = tWin.innerWidth || tWin.document.documentElement.clientWidth;
+            var pH = tWin.innerHeight || tWin.document.documentElement.clientHeight;
+            
+            // 目标尺寸：强行设定大屏黄金比例
+            var targetW = Math.min(1250, pW - 20);
+            var targetH = Math.min(780, pH - 20);
+            var targetLeft = Math.max(10, (pW - targetW) / 2);
+            var targetTop = Math.max(10, (pH - targetH) / 2);
+            
+            var layerIdx = null;
 
+            // 检测 1: IFRAME 模式 (绝大多数宝塔插件的情况)
+            if (window.name && tWin.layer && tWin.layer.getFrameIndex) {
+                layerIdx = tWin.layer.getFrameIndex(window.name);
+            }
+            // 检测 2: AJAX 模式 (部分新版 UI)
+            else if (typeof $ !== 'undefined') {
+                var $layer = $('.btwaf-wrap').closest('.layui-layer');
+                if ($layer.length > 0) {
+                    var layerId = $layer.attr('id');
+                    if (layerId) layerIdx = layerId.replace('layui-layer', '');
+                }
+            }
+
+            // 统一调用宝塔最顶层 Layer.js 官方 API 修改尺寸
+            if (layerIdx && tWin.layer && tWin.layer.style) {
+                tWin.layer.style(layerIdx, {
+                    width: targetW + 'px',
+                    height: targetH + 'px',
+                    top: targetTop + 'px',
+                    left: targetLeft + 'px'
+                });
+                
+                // 给 AJAX 模式手动调整内容区高度
+                if (typeof $ !== 'undefined' && !window.name) {
+                    var $ajxLayer = $('.btwaf-wrap').closest('.layui-layer');
+                    if ($ajxLayer.length) {
+                        $ajxLayer.find('.layui-layer-content').css('height', (targetH - 43) + 'px');
+                    }
+                }
+            }
+        } catch(e) {}
+    }, 200);
     var btwaf_current_site = "";
 
     function btwaf_loadBlacklist() {
