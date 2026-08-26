@@ -357,7 +357,7 @@
                         </div>
                         <div class="btwaf-dash-item">
                             <div class="btwaf-dash-label">今日硬封禁 IP</div>
-                            <div class="btwaf-dash-val">0</div>
+                            <div class="btwaf-dash-val" id="dash_ban_count">0</div>
                         </div>
                         <div class="btwaf-dash-item">
                             <div class="btwaf-dash-label">今日拦截事件</div>
@@ -468,10 +468,10 @@
                         <select id="btwaf_tamper_site" class="btwaf-select">
                             <option value="default">请选择站点...</option>
                         </select>
-                        <button class="btwaf-btn btwaf-btn-primary" onclick="layer.msg('基线已生成')">1. 生成安全基线</button>
+                        <button class="btwaf-btn btwaf-btn-primary" onclick="btwaf_genBaseline()">1. 生成安全基线</button>
                         <button class="btwaf-btn btwaf-btn-danger" onclick="btwaf_runInspection()">2. 执行深度巡检</button>
                     </div>
-                    <pre style="background:#f5f5f5; padding:15px; border-radius:4px;" id="btwaf_tamper_result">准备就绪。</pre>
+                    <pre style="background:#f5f5f5; padding:15px; border-radius:4px; max-height: 400px; overflow-y: auto;" id="btwaf_tamper_result">准备就绪。</pre>
                 </div>
             </div>
         </div>
@@ -772,6 +772,10 @@
                 document.getElementById('dash_global_waf').style.color = (d.global_enable === 'on' ? 'var(--btwaf-primary)' : 'var(--btwaf-danger)');
                 document.getElementById('dash_event_count').innerText = d.blockedCount + " 次";
                 
+                if (document.getElementById('dash_ban_count')) {
+                    document.getElementById('dash_ban_count').innerText = d.hardBlockedCount || 0;
+                }
+                
                 // Update Honeypot UI
                 var hpOn = (d.drop_action === 'tarpit');
                 document.getElementById('dash_hp_waf').innerText = hpOn ? '开启' : '关闭';
@@ -910,7 +914,9 @@
     }
 
     function btwaf_genBaseline() {
-        var path = document.getElementById('btwaf_baseline_path').value;
+        var site = document.getElementById('btwaf_tamper_site').value;
+        if (site === 'default') return layer.msg('请先选择防护站点', {icon: 2});
+        var path = '/www/wwwroot/' + site;
         btwaf_api('generate_baseline', {path: path}, function(res) {
             document.getElementById('btwaf_tamper_result').innerText = res.msg;
         });

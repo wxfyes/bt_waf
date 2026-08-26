@@ -139,6 +139,14 @@ class btwaf_v2board_main:
                     blocked_count = sum(1 for line in f if line.strip())
             except:
                 pass
+                
+        hard_blocked_count = 0
+        if os.path.exists(self.blacklist_file):
+            try:
+                with open(self.blacklist_file, 'r', encoding='utf-8') as f:
+                    hard_blocked_count = len([line for line in f if line.strip()])
+            except:
+                pass
 
         return public.returnMsg(True, {
             "siteName": site_name,
@@ -151,7 +159,8 @@ class btwaf_v2board_main:
             "geoip_enable": geoip_enable,
             "geoip_regions": geoip_regions,
             "threat_enable": threat_enable,
-            "blockedCount": blocked_count
+            "blockedCount": blocked_count,
+            "hardBlockedCount": hard_blocked_count
         })
 
     def set_honeypot(self, args):
