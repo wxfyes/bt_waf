@@ -116,15 +116,7 @@ end
 local site_framework = ngx.var.btwaf_framework or config.framework or "general"
 local req_uri = ngx.var.request_uri
 
--- ================= 框架级绝对白名单 ================= --
-if site_framework == "v2board" then
-    -- V2Board 专属放行逻辑（API 订阅与服务端节点通信免死金牌）
-    -- 兼容默认订阅路径，以及用户自定义的安全订阅路径，以及 Telegram 官方 Bot Webhook 和第三方安全防控机器人的回调
-    -- 置于最顶层，无视 GeoIP、CC 和任何其他规则
-    if string.find(req_uri, "/api/v1/client/subscribe") or string.find(req_uri, "/api/v1/server/") or string.find(req_uri, "/ktelie/verxcen/cliuekub/siktdlext") or string.find(req_uri, "/telegram/webhook") or string.find(req_uri, "/security/webhook") then
-        return
-    end
-end
+
 
 -- 0. IP 黑名单检测
 if _G.waf_rules.blacklist then
@@ -137,7 +129,30 @@ if _G.waf_rules.blacklist then
     end
 end
 
--- 0.5 CC 攻击频率检测
+-- 0.5 User-Agent 及空间测绘扫描器检测 (防被墙与主动探测)
+local ua = ngx.var.http_user_agent
+if not ua or ua == "" then
+    -- 禁止空 UA，很多简单的发包工具和测绘探针 UA 为空
+    trigger_penalty("Empty User-Agent", "null")
+    return
+else
+    local match, payload = match_rules(ua, "user_agent")
+    if match then
+        trigger_penalty("Malicious User-Agent/Scanner", payload)
+        return
+    end
+end
+
+-- ================= 框架级特殊放行 ================= --
+if site_framework == "v2board" then
+    -- V2Board 专属放行逻辑（API 订阅与服务端节点通信免死金牌）
+    -- 置于 UA 和黑名单之后，但在 CC 和 GeoIP 之前，确保节点不被 CC 和 GeoIP 误杀，但依然拦截恶意扫描器
+    if string.find(req_uri, "/api/v1/client/subscribe") or string.find(req_uri, "/api/v1/server/") or string.find(req_uri, "/ktelie/verxcen/cliuekub/siktdlext") or string.find(req_uri, "/telegram/webhook") or string.find(req_uri, "/security/webhook") then
+        return
+    end
+end
+
+-- 0.8 CC 攻击频率检测
 if config.cc_enable == "on" then
     local cc_dict = ngx.shared.btwaf_ip_scores
     if cc_dict then
@@ -155,7 +170,7 @@ if config.cc_enable == "on" then
     end
 end
 
--- 0.8 GeoIP 检测 (兼容 Cloudflare 与 Nginx GeoIP)
+-- 0.9 GeoIP 检测 (兼容 Cloudflare 与 Nginx GeoIP)
 if config.geoip_enable == "on" then
     local headers = ngx.req.get_headers()
     local country = headers["CF-IPCountry"] or ngx.var.geoip_country_code or ngx.var.geoip2_data_country_code
@@ -176,25 +191,11 @@ if config.geoip_enable == "on" then
     end
 end
 
--- 1. 框架专属防御与放行
+-- 1. 框架专属防御
 if site_framework == "v2board" then
     local match, payload = match_rules(req_uri, "v2board")
     if match then
         trigger_penalty("V2Board Specific Protection", payload)
-        return
-    end
-end
-
--- 1.5 User-Agent 及空间测绘扫描器检测 (防被墙与爬虫)
-local ua = ngx.var.http_user_agent
-if not ua or ua == "" then
-    -- 禁止空 UA，很多简单的发包工具和测绘探针 UA 为空
-    trigger_penalty("Empty User-Agent", "null")
-    return
-else
-    local match, payload = match_rules(ua, "user_agent")
-    if match then
-        trigger_penalty("Malicious User-Agent/Scanner", payload)
         return
     end
 end
