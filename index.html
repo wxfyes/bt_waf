@@ -434,14 +434,20 @@
         var loading = layer.msg('处理中...', {icon: 16, time: 0, shade: 0.3});
         $.post('/plugin?action=a&name=btwaf_v2board&s=' + method, args, function(res) {
             layer.close(loading);
+            if (typeof res === 'string') {
+                try { res = JSON.parse(res); } catch(e) {}
+            }
             if (callback) callback(res);
-            else layer.msg(res.msg, {icon: res.status ? 1 : 2});
+            else if (res.msg) layer.msg(res.msg, {icon: res.status ? 1 : 2});
         });
     }
 
     function btwaf_initSites() {
         $.post('/plugin?action=a&name=btwaf_v2board&s=get_sites', {}, function(res) {
-            if (res.status) {
+            if (typeof res === 'string') {
+                try { res = JSON.parse(res); } catch(e) {}
+            }
+            if (res && res.status) {
                 var options = '<option value="default">请选择站点...</option>';
                 for (var i = 0; i < res.msg.length; i++) {
                     options += '<option value="' + res.msg[i] + '">' + res.msg[i] + '</option>';
@@ -453,8 +459,13 @@
 
     function btwaf_loadDashboard() {
         var site = document.getElementById('btwaf_site_select').value;
+        if (site === "default") return;
+        
         $.post('/plugin?action=a&name=btwaf_v2board&s=get_status', {siteName: site}, function(res) {
-            if(res.status) {
+            if (typeof res === 'string') {
+                try { res = JSON.parse(res); } catch(e) {}
+            }
+            if(res && res.status) {
                 var d = res.msg;
                 document.getElementById('dash_global_waf').innerText = (d.global_enable === 'on' ? '开启' : '关闭');
                 document.getElementById('dash_global_waf').style.color = (d.global_enable === 'on' ? 'var(--btwaf-primary)' : 'var(--btwaf-danger)');
@@ -471,7 +482,7 @@
         }
         btwaf_current_site = site;
         btwaf_api('get_status', {siteName: site}, function(res) {
-            if(res.status) {
+            if(res && res.status) {
                 var html = `
                     <div style="display:flex; gap: 30px;">
                         <div>当前站点：<b>${res.msg.siteName}</b></div>
@@ -483,12 +494,15 @@
                 btwaf_loadDashboard();
                 
                 $.post('/plugin?action=a&name=btwaf_v2board&s=get_framework', {siteName: site}, function(res2) {
-                    if(res2.status) {
+                    if (typeof res2 === 'string') {
+                        try { res2 = JSON.parse(res2); } catch(e) {}
+                    }
+                    if(res2 && res2.status) {
                         document.getElementById('btwaf_framework_select').value = res2.msg;
                     }
                 });
             } else {
-                layer.msg(res.msg, {icon: 2});
+                layer.msg(res ? res.msg : "请求失败", {icon: 2});
             }
         });
     }
