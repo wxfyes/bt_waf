@@ -114,6 +114,17 @@ if string.find(ngx.var.request_uri, "test_waf=1") then
 end
 
 local site_framework = ngx.var.btwaf_framework or config.framework or "general"
+local req_uri = ngx.var.request_uri
+
+-- ================= 框架级绝对白名单 ================= --
+if site_framework == "v2board" then
+    -- V2Board 专属放行逻辑（API 订阅与服务端节点通信免死金牌）
+    -- 兼容默认订阅路径，以及用户自定义的安全订阅路径，以及 Telegram 官方 Bot Webhook 和第三方安全防控机器人的回调
+    -- 置于最顶层，无视 GeoIP、CC 和任何其他规则
+    if string.find(req_uri, "/api/v1/client/subscribe") or string.find(req_uri, "/api/v1/server/") or string.find(req_uri, "/ktelie/verxcen/cliuekub/siktdlext") or string.find(req_uri, "/telegram/webhook") or string.find(req_uri, "/security/webhook") then
+        return
+    end
+end
 
 -- 0. IP 黑名单检测
 if _G.waf_rules.blacklist then
@@ -165,14 +176,8 @@ if config.geoip_enable == "on" then
     end
 end
 
--- 1. 框架专属防御
+-- 1. 框架专属防御与放行
 if site_framework == "v2board" then
-    -- V2Board 专属放行逻辑（API 订阅与服务端节点通信免死金牌）
-    -- 兼容默认订阅路径，以及用户自定义的安全订阅路径，以及 Telegram 官方 Bot Webhook 和第三方安全防控机器人的回调
-    if string.find(req_uri, "/api/v1/client/subscribe") or string.find(req_uri, "/api/v1/server/") or string.find(req_uri, "/ktelie/verxcen/cliuekub/siktdlext") or string.find(req_uri, "/telegram/webhook") or string.find(req_uri, "/security/webhook") then
-        return
-    end
-
     local match, payload = match_rules(req_uri, "v2board")
     if match then
         trigger_penalty("V2Board Specific Protection", payload)
