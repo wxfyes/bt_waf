@@ -563,24 +563,30 @@
 </div>
 
 <script>
-    // 尝试自动拉宽宝塔的弹窗父组件 (多种兼容方式)
-    try {
-        var idx = parent.layer.getFrameIndex(window.name);
-        if (idx) {
-            parent.layer.style(idx, {
-                width: '1200px',
-                left: ($(parent.window).width() - 1200) / 2 + 'px'
-            });
-            if(parent.$) {
-                parent.$('#layui-layer' + idx).css('width', '1200px');
-                var w = parent.$(parent.window).width();
-                parent.$('#layui-layer' + idx).css('left', (w - 1200) / 2 + 'px');
+    // 强制宝塔父级窗口拉伸 (加入多重兼容与延时确保 Layer 已渲染)
+    setTimeout(function() {
+        try {
+            var p = window.parent;
+            var w = 1050; // 宽度
+            var left = (p.innerWidth - w) / 2;
+            
+            // 尝试 1：原生 Layer API
+            var idx = p.layer.getFrameIndex(window.name);
+            if (idx) {
+                p.layer.style(idx, { width: w + 'px', left: left + 'px' });
             }
-        }
-    } catch(e) {}
+            
+            // 尝试 2：直接操作 DOM
+            if (p.$) {
+                var $layer = p.$('#layui-layer' + idx);
+                $layer.css({ 'width': w + 'px', 'left': left + 'px' });
+                $layer.find('.layui-layer-title').css('width', '100%');
+            }
+        } catch(e) {}
+    }, 200);
     
     // 自身兜底宽度
-    document.body.style.minWidth = '1100px';
+    document.body.style.minWidth = '1000px';
 
     var btwaf_current_site = "";
 
