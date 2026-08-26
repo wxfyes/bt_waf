@@ -478,16 +478,38 @@
                 <div class="btwaf-card-header">
                     📑 底层防御日志与审计
                     <div>
-                        <button class="btwaf-btn" onclick="btwaf_loadLogs()">刷新日志流</button>
+                        <button class="btwaf-btn" onclick="btwaf_loadLogFiles()">刷新日志文件列表</button>
                     </div>
                 </div>
                 <div class="btwaf-card-body">
                     <div class="btwaf-form-group" style="margin-bottom:15px; padding-bottom:15px; border-bottom:1px solid var(--btwaf-border);">
-                        <label style="color:var(--btwaf-danger);">一键清理日志</label>
-                        <span style="font-size:13px; color:#666; flex:1;">为防止误操作，清理当天拦截日志前请确认。安全事件日志不可恢复。</span>
-                        <button class="btwaf-btn btwaf-btn-danger" style="margin-top:0;" onclick="btwaf_clearLogs()">执行清理</button>
+                        <label style="color:var(--btwaf-danger);">核弹级清理</label>
+                        <span style="font-size:13px; color:#666; flex:1;">为防止误操作，清空【全部历史拦截日志】前请确认。安全事件日志不可恢复。</span>
+                        <button class="btwaf-btn btwaf-btn-danger" style="margin-top:0;" onclick="btwaf_clearLogs()">执行一键清空</button>
                     </div>
-                    <div class="btwaf-log-container" id="btwaf_log_viewer">加载中...</div>
+                    
+                    <div style="font-weight:bold; margin-bottom:10px; font-size:14px;">🗂️ 拦截日志文件列表</div>
+                    <div style="max-height: 200px; overflow-y: auto; border: 1px solid var(--btwaf-border); margin-bottom: 15px;">
+                        <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                            <thead style="position: sticky; top: 0; z-index: 1;">
+                                <tr style="background:#f0f2f5; text-align:left;">
+                                    <th style="padding:10px; border:1px solid var(--btwaf-border); border-top:none;">文件名</th>
+                                    <th style="padding:10px; border:1px solid var(--btwaf-border); border-top:none; width:120px;">生成时间</th>
+                                    <th style="padding:10px; border:1px solid var(--btwaf-border); border-top:none; width:100px;">文件大小</th>
+                                    <th style="padding:10px; border:1px solid var(--btwaf-border); border-top:none; width:120px;">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="btwaf_log_files_tbody">
+                                <tr><td colspan="4" style="padding:10px; text-align:center; color:#999;">加载中...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <div style="font-weight:bold; font-size:14px;">👁️ 日志流阅读器 <span id="btwaf_current_log_name" style="color:var(--btwaf-primary); font-weight:normal; font-size:13px;">(暂未选择)</span></div>
+                        <button class="btwaf-btn" style="padding:2px 10px; font-size:12px;" onclick="btwaf_viewLogFile('')">刷新当前内容</button>
+                    </div>
+                    <div class="btwaf-log-container" id="btwaf_log_viewer" style="height: 300px;">点击上方文件的 [查看] 按钮读取日志内容...</div>
                 </div>
             </div>
         </div>
@@ -730,7 +752,7 @@
         document.getElementById('btwaf_panel_' + tabId).classList.add('active');
 
         if(tabId === 'alerts') btwaf_loadAlerts();
-        if(tabId === 'logs') btwaf_loadLogs();
+        if(tabId === 'logs') btwaf_loadLogFiles();
         if(tabId === 'dashboard') btwaf_loadDashboard();
         if(tabId === 'blacklist') btwaf_loadBlacklist();
     }
@@ -962,14 +984,75 @@
         });
     }
 
+    var btwaf_current_view_file = '';
+    
+    function btwaf_loadLogFiles() {
+        document.getElementById('btwaf_log_files_tbody').innerHTML = '<tr><td colspan="4" style="padding:10px; text-align:center; color:#999;">加载中...</td></tr>';
+        btwaf_api('get_log_files', {}, function(res) {
+            if(res && res.status && res.msg && res.msg.length > 0) {
+                var html = '';
+                for(var i = 0; i < res.msg.length; i++) {
+                    var f = res.msg[i];
+                    html += `
+                        <tr style="border-bottom: 1px solid var(--btwaf-border);">
+                            <td style="padding:8px 10px; font-weight:bold; color:var(--btwaf-primary);">${f.filename}</td>
+                            <td style="padding:8px 10px;">${f.date}</td>
+                            <td style="padding:8px 10px;">${f.size}</td>
+                            <td style="padding:8px 10px;">
+                                <button class="btwaf-btn" style="padding:2px 8px; font-size:12px; margin-right:5px;" onclick="btwaf_viewLogFile('${f.filename}')">查看</button>
+                                <button class="btwaf-btn btwaf-btn-danger" style="padding:2px 8px; font-size:12px;" onclick="btwaf_deleteLogFile('${f.filename}')">删除</button>
+                            </td>
+                        </tr>
+                    `;
+                }
+                document.getElementById('btwaf_log_files_tbody').innerHTML = html;
+                
+                // 默认加载第一个文件的内容
+                if(btwaf_current_view_file === '' && res.msg.length > 0) {
+                    btwaf_viewLogFile(res.msg[0].filename);
+                }
+            } else {
+                document.getElementById('btwaf_log_files_tbody').innerHTML = '<tr><td colspan="4" style="padding:10px; text-align:center; color:#999;">暂无历史拦截日志文件</td></tr>';
+                document.getElementById('btwaf_log_viewer').innerText = "无日志数据。";
+            }
+        });
+    }
+
+    function btwaf_viewLogFile(filename) {
+        if(filename) btwaf_current_view_file = filename;
+        if(!btwaf_current_view_file) return;
+        
+        document.getElementById('btwaf_current_log_name').innerText = "(正在查看: " + btwaf_current_view_file + ")";
+        document.getElementById('btwaf_log_viewer').innerText = "加载中...";
+        btwaf_api('get_logs', {filename: btwaf_current_view_file}, function(res) {
+            document.getElementById('btwaf_log_viewer').innerText = (res && res.status) ? res.msg : "该文件为空或读取失败。";
+        });
+    }
+
+    function btwaf_deleteLogFile(filename) {
+        if(confirm("确定彻底删除日志文件 " + filename + " 吗？删除后无法恢复！")) {
+            btwaf_api('delete_log_file', {filename: filename}, function(res) {
+                layer.msg(res.msg, {icon: res.status ? 1 : 2});
+                if(btwaf_current_view_file === filename) {
+                    btwaf_current_view_file = '';
+                    document.getElementById('btwaf_current_log_name').innerText = "(暂未选择)";
+                    document.getElementById('btwaf_log_viewer').innerText = "日志文件已删除。";
+                }
+                btwaf_loadLogFiles();
+            });
+        }
+    }
+
     function btwaf_clearLogs() {
-        layer.prompt({title: '安全确认：请输入大写 CLEAR 执行清理', formType: 0}, function(pass, index){
+        layer.prompt({title: '核弹级清理：请输入大写 CLEAR 清空所有拦截日志', formType: 0}, function(pass, index){
             if(pass === 'CLEAR') {
                 layer.close(index);
                 btwaf_api('clear_logs', {}, function(res) {
                     layer.msg(res.msg, {icon: 1});
-                    btwaf_loadLogs();
-                    btwaf_loadAlerts();
+                    btwaf_current_view_file = '';
+                    document.getElementById('btwaf_current_log_name').innerText = "(暂未选择)";
+                    document.getElementById('btwaf_log_viewer').innerText = "所有拦截日志已被清空。";
+                    btwaf_loadLogFiles();
                 });
             } else {
                 layer.msg('输入错误，已取消清理', {icon: 2});

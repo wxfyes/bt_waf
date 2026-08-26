@@ -392,17 +392,71 @@ class btwaf_v2board_main:
         except:
             pass
 
+    def get_log_files(self, args):
+        """获取所有拦截日志文件列表"""
+        log_dir = "/www/wwwlogs/waf/"
+        if not os.path.exists(log_dir):
+            return public.returnMsg(True, [])
+        import time
+        files = []
+        for f in os.listdir(log_dir):
+            if f.startswith("intercept_") and f.endswith(".log"):
+                filepath = os.path.join(log_dir, f)
+                if os.path.isfile(filepath):
+                    stat = os.stat(filepath)
+                    size = stat.st_size
+                    # format size
+                    if size < 1024:
+                        size_str = f"{size} B"
+                    elif size < 1024 * 1024:
+                        size_str = f"{size / 1024:.1f} KB"
+                    else:
+                        size_str = f"{size / (1024 * 1024):.1f} MB"
+                    
+                    files.append({
+                        "filename": f,
+                        "size": size_str,
+                        "date": time.strftime("%Y-%m-%d", time.localtime(stat.st_mtime))
+                    })
+        # 按文件名倒序排列 (最新的在前)
+        files.sort(key=lambda x: x["filename"], reverse=True)
+        return public.returnMsg(True, files)
+
+    def delete_log_file(self, args):
+        """物理删除单个拦截日志文件"""
+        filename = getattr(args, 'filename', '')
+        if not filename or ".." in filename or "/" in filename:
+            return public.returnMsg(False, "无效的文件名")
+            
+        filepath = f"/www/wwwlogs/waf/{filename}"
+        if os.path.exists(filepath):
+            try:
+                os.remove(filepath)
+                return public.returnMsg(True, f"文件 {filename} 删除成功")
+            except Exception as e:
+                return public.returnMsg(False, f"删除失败: {str(e)}")
+        return public.returnMsg(False, "文件不存在")
+
     def get_logs(self, args):
-        """获取当天的 WAF 拦截日志 (倒序取最新 200 条)"""
+        """获取指定的 WAF 拦截日志 (倒序取最新 200 条)"""
         # 顺便执行一次过期日志清理
         self._clean_old_logs()
         
-        import datetime
-        date_str = datetime.datetime.now().strftime("%Y-%m-%d")
-        log_file = f"/www/wwwlogs/waf/intercept_{date_str}.log"
+        filename = getattr(args, 'filename', '')
+        
+        if not filename:
+            import datetime
+            date_str = datetime.datetime.now().strftime("%Y-%m-%d")
+            filename = f"intercept_{date_str}.log"
+            
+        # 安全检查
+        if ".." in filename or "/" in filename:
+            return public.returnMsg(False, "无效的文件名")
+            
+        log_file = f"/www/wwwlogs/waf/{filename}"
         
         if not os.path.exists(log_file):
-            return public.returnMsg(True, "暂无今日拦截记录。")
+            return public.returnMsg(True, "暂无拦截记录。")
             
         try:
             with open(log_file, 'r', encoding='utf-8') as f:
@@ -416,17 +470,20 @@ class btwaf_v2board_main:
             return public.returnMsg(False, f"无法读取日志文件: {str(e)}")
 
     def clear_logs(self, args):
-        """物理清理当日拦截日志"""
-        import datetime
-        date_str = datetime.datetime.now().strftime("%Y-%m-%d")
-        log_file = f"/www/wwwlogs/waf/intercept_{date_str}.log"
-        if os.path.exists(log_file):
-            try:
-                os.remove(log_file)
-                return public.returnMsg(True, "日志清理成功。")
-            except Exception as e:
-                return public.returnMsg(False, f"清理失败: {str(e)}")
-        return public.returnMsg(True, "无日志需要清理。")
+        """一键清空所有拦截日志"""
+        log_dir = "/www/wwwlogs/waf/"
+        if not os.path.exists(log_dir):
+            return public.returnMsg(True, "无日志需要清理。")
+            
+        try:
+            count = 0
+            for f in os.listdir(log_dir):
+                if f.startswith("intercept_") and f.endswith(".log"):
+                    os.remove(os.path.join(log_dir, f))
+                    count += 1
+            return public.returnMsg(True, f"成功清空了 {count} 个历史日志文件。")
+        except Exception as e:
+            return public.returnMsg(False, f"清理失败: {str(e)}")
 
     def get_nginx_error_log(self, args):
         site_name = getattr(args, 'siteName', '')
