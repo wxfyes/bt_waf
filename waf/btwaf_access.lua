@@ -70,9 +70,16 @@ ngx.header["X-WAF-Rules"] = tostring(type(_G.waf_rules))
 -- Tarpit 惩罚
 local function trigger_penalty(rule, payload)
     log_record(rule, payload, config.drop_action)
-    if config.drop_action == "tarpit" then
+    
+    -- 【防自杀保护】如果是自我测试探针，绝对不要进入 Tarpit，否则会耗尽用户浏览器的连接池导致网站假死！
+    local action = config.drop_action
+    if rule == "WAF Self-Test" then
+        action = "block"
+    end
+
+    if action == "tarpit" then
         tarpit.execute()
-    elseif config.drop_action == "block" then
+    elseif action == "block" then
         ngx.status = 406
         ngx.header.content_type = "text/html; charset=utf-8"
         ngx.say(string.format([[
@@ -130,27 +137,27 @@ if _G.waf_rules.blacklist then
     end
 end
 
--- 0.5 User-Agent 及空间测绘扫描器检测 (防被墙与主动探测)
+-- 0.5 空 User-Agent 斩杀 (绝杀极简探测器与 GFW 主动嗅探)
 local ua = ngx.var.http_user_agent
 if not ua or ua == "" then
-    -- 禁止空 UA，很多简单的发包工具和测绘探针 UA 为空
     trigger_penalty("Empty User-Agent", "null")
     return
-else
-    local match, payload = match_rules(ua, "user_agent")
-    if match then
-        trigger_penalty("Malicious User-Agent/Scanner", payload)
-        return
-    end
 end
 
 -- ================= 框架级特殊放行 ================= --
 if site_framework == "v2board" then
     -- V2Board 专属放行逻辑（API 订阅与服务端节点通信免死金牌）
-    -- 置于 UA 和黑名单之后，但在 CC 和 GeoIP 之前，确保节点不被 CC 和 GeoIP 误杀，但依然拦截恶意扫描器
+    -- 必须在扫描器 UA 检测之前，因为节点和订阅客户端经常使用 go-http-client 或 Clash/Surge 等易被误杀的 UA
     if string.find(req_uri, "/api/v1/client/subscribe") or string.find(req_uri, "/api/v1/server/") or string.find(req_uri, "/ktelie/verxcen/cliuekub/siktdlext") or string.find(req_uri, "/telegram/webhook") or string.find(req_uri, "/security/webhook") then
         return
     end
+end
+
+-- 0.6 恶意扫描器 User-Agent 检测
+local match, payload = match_rules(ua, "user_agent")
+if match then
+    trigger_penalty("Malicious User-Agent/Scanner", payload)
+    return
 end
 
 -- 0.8 CC 攻击频率检测
