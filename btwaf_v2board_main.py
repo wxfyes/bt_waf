@@ -374,8 +374,29 @@ class btwaf_v2board_main:
         except Exception as e:
             return public.returnMsg(False, f"修改失败: {str(e)}")
 
+    def _clean_old_logs(self):
+        """清理超过 5 天的历史日志"""
+        try:
+            import time
+            log_dir = "/www/wwwlogs/waf/"
+            if not os.path.exists(log_dir):
+                return
+            now = time.time()
+            for f in os.listdir(log_dir):
+                if f.startswith("intercept_") and f.endswith(".log"):
+                    filepath = os.path.join(log_dir, f)
+                    if os.path.isfile(filepath):
+                        # 如果文件修改时间早于5天前
+                        if os.stat(filepath).st_mtime < now - 5 * 86400:
+                            os.remove(filepath)
+        except:
+            pass
+
     def get_logs(self, args):
         """获取当天的 WAF 拦截日志 (倒序取最新 200 条)"""
+        # 顺便执行一次过期日志清理
+        self._clean_old_logs()
+        
         import datetime
         date_str = datetime.datetime.now().strftime("%Y-%m-%d")
         log_file = f"/www/wwwlogs/waf/intercept_{date_str}.log"
