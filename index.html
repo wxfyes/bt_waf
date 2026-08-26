@@ -376,6 +376,7 @@
                         </select>
                         <button class="btwaf-btn btwaf-btn-primary" style="margin-left: 10px;" onclick="btwaf_checkStatus()">检查状态</button>
                         <button class="btwaf-btn btwaf-btn-danger" style="margin-left: 10px;" onclick="btwaf_injectWaf()">一键注入防护</button>
+                        <button class="btwaf-btn" style="margin-left: 10px; border-color: var(--btwaf-danger); color: var(--btwaf-danger);" onclick="btwaf_uninjectWaf()">取消注入</button>
                         <button class="btwaf-btn" style="margin-left: 10px; background-color: #52c41a; color: #fff; border:none;" onclick="btwaf_diagnose()">内网穿透诊断</button>
                     </div>
                     <div style="margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 4px;" id="btwaf_site_status">
@@ -929,9 +930,24 @@
     function btwaf_injectWaf() {
         var site = document.getElementById('btwaf_site_select').value;
         if(site === "default") return layer.msg("请先选择站点", {icon: 2});
-        btwaf_api('inject_waf', {siteName: site}, function(res) {
-            layer.msg(res.msg, {icon: res.status ? 1 : 2});
-            if(res.status) btwaf_checkStatus();
+        layer.confirm('确定要将防护引擎注入到站点 [' + site + '] 吗？', function(idx){
+            layer.close(idx);
+            btwaf_api('inject_waf', {siteName: site}, function(res) {
+                layer.msg(res.msg, {icon: res.status ? 1 : 2});
+                if(res.status) btwaf_checkStatus();
+            });
+        });
+    }
+
+    function btwaf_uninjectWaf() {
+        var site = document.getElementById('btwaf_site_select').value;
+        if(site === "default") return layer.msg("请先选择要取消防御的站点", {icon: 2});
+        layer.confirm('确定要取消站点 [' + site + '] 的防御保护吗？<br>取消后该站点将失去所有 WAF 保护！', {icon: 3, title:'高危操作'}, function(idx){
+            layer.close(idx);
+            btwaf_api('uninject_waf', {siteName: site}, function(res) {
+                layer.msg(res.msg, {icon: res.status ? 1 : 2});
+                if(res.status) btwaf_checkStatus();
+            });
         });
     }
 

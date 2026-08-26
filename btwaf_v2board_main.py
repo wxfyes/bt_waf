@@ -598,7 +598,41 @@ class btwaf_v2board_main:
             
         # 4. 热重载
         public.ExecShell("nginx -s reload")
-        return public.returnMsg(True, f"WAF 防御已成功注入站点: {site_name}")
+        return public.returnMsg(True, f"已成功将防御引擎注入至 {site_name}！")
+
+    def uninject_waf(self, args):
+        """取消选中站点的 WAF 注入"""
+        site_name = getattr(args, 'siteName', '')
+        if not site_name or site_name == "default":
+            return public.returnMsg(False, "请先选择要取消防御的站点")
+            
+        site_conf_path = f"/www/server/panel/vhost/nginx/{site_name}.conf"
+        if not os.path.exists(site_conf_path):
+            return public.returnMsg(False, f"未找到站点配置文件: {site_conf_path}")
+            
+        with open(site_conf_path, 'r', encoding='utf-8') as f:
+            site_conf = f.read()
+            
+        if "BTWAF_SITE_START" not in site_conf:
+            return public.returnMsg(True, f"站点 {site_name} 未注入过防御，无需取消。")
+            
+        shutil.copyfile(site_conf_path, site_conf_path + ".waf_bak")
+        
+        # 移除 BTWAF 注入块
+        new_site_conf = re.sub(r'\s*# BTWAF_SITE_START.*?# BTWAF_SITE_END\n', '\n', site_conf, flags=re.DOTALL)
+        
+        with open(site_conf_path, 'w', encoding='utf-8') as f:
+            f.write(new_site_conf)
+            
+        # 严格测试与防崩溃回滚
+        out, err = public.ExecShell("nginx -t")
+        if "successful" not in out and "successful" not in err:
+            shutil.copyfile(site_conf_path + ".waf_bak", site_conf_path)
+            return public.returnMsg(False, f"取消注入失败，已自动撤销更改。报错信息: {err}")
+            
+        # 热重载
+        public.ExecShell("nginx -s reload")
+        return public.returnMsg(True, f"已成功取消 {site_name} 的防护引擎注入！")
         
     def generate_baseline(self, args):
         """生成 SHA-256 基线"""
