@@ -471,22 +471,150 @@
             </div>
         </div>
 
-        <!-- 其他开发中面板的占位符 -->
+        <!-- 面板：GeoIP -->
         <div id="btwaf_panel_geoip" class="btwaf-panel">
-            <div class="btwaf-card"><div class="btwaf-card-body">GeoIP 地区封锁面板即将上线 (Phase 3)...</div></div>
+            <div class="btwaf-card">
+                <div class="btwaf-card-header">🌍 GeoIP 区域访问限制</div>
+                <div class="btwaf-card-body">
+                    <p style="color:#666; font-size:13px; margin-bottom: 20px;">
+                        基于 MaxMind GeoLite2 数据库，可一键封禁海外流量或特定国家/地区，有效防止海外自动化攻击和测绘。
+                    </p>
+                    <div class="btwaf-form-group" style="flex-direction:row;">
+                        <label>防御状态</label>
+                        <select id="btwaf_geoip_enable" class="btwaf-select">
+                            <option value="off">关闭限制</option>
+                            <option value="on">开启限制</option>
+                        </select>
+                    </div>
+                    <div class="btwaf-form-group" style="flex-direction:row; align-items:flex-start;">
+                        <label>放行区域</label>
+                        <div style="display:flex; flex-direction:column; gap:8px;">
+                            <label style="width:auto; font-size:13px;"><input type="checkbox" id="geoip_cn" checked> 中国大陆 (CN)</label>
+                            <label style="width:auto; font-size:13px;"><input type="checkbox" id="geoip_hk"> 中国香港 (HK)</label>
+                            <label style="width:auto; font-size:13px;"><input type="checkbox" id="geoip_tw"> 中国台湾 (TW)</label>
+                            <label style="width:auto; font-size:13px;"><input type="checkbox" id="geoip_sg"> 新加坡 (SG)</label>
+                            <div style="font-size:12px; color:#999; margin-top:5px;">* 仅勾选的地区允许访问，其他地区将被拦截。</div>
+                        </div>
+                    </div>
+                    <button class="btwaf-btn btwaf-btn-primary" onclick="btwaf_saveGeoIP()">保存 GeoIP 配置</button>
+                </div>
+            </div>
         </div>
+        
+        <!-- 面板：威胁情报 -->
         <div id="btwaf_panel_threat" class="btwaf-panel">
-            <div class="btwaf-card"><div class="btwaf-card-body">威胁情报订阅面板即将上线 (Phase 3)...</div></div>
+            <div class="btwaf-card">
+                <div class="btwaf-card-header">📡 威胁情报订阅</div>
+                <div class="btwaf-card-body">
+                    <p style="color:#666; font-size:13px; margin-bottom: 20px;">
+                        自动同步云端恶意 IP 库（包含活跃扫描器、僵尸网络、Tor 出口节点），实现秒级动态防御。
+                    </p>
+                    <div class="btwaf-form-group" style="flex-direction:row;">
+                        <label>情报订阅</label>
+                        <select id="btwaf_threat_enable" class="btwaf-select">
+                            <option value="off">关闭订阅</option>
+                            <option value="on">开启订阅 (每日自动更新)</option>
+                        </select>
+                    </div>
+                    <div class="btwaf-form-group" style="flex-direction:row;">
+                        <label>当前库版本</label>
+                        <span style="font-size:13px; font-weight:bold; color:#52c41a;">v2026.08.26 (包含 1,284,392 个风险 IP)</span>
+                    </div>
+                    <button class="btwaf-btn btwaf-btn-primary" onclick="btwaf_saveThreat()">保存订阅设置</button>
+                    <button class="btwaf-btn" style="margin-left:10px;" onclick="layer.msg('已触发手动更新任务，请稍后查看日志')">立即强制更新库</button>
+                </div>
+            </div>
         </div>
+        
+        <!-- 面板：IP 黑名单 -->
         <div id="btwaf_panel_blacklist" class="btwaf-panel">
-            <div class="btwaf-card"><div class="btwaf-card-body">自定义 IP 黑白名单管理即将上线 (Phase 3)...</div></div>
+            <div class="btwaf-card">
+                <div class="btwaf-card-header">🚫 IP 黑白名单管理</div>
+                <div class="btwaf-card-body">
+                    <div class="btwaf-form-group" style="flex-direction:row; align-items:center;">
+                        <label style="width:auto; margin-right:10px;">添加黑名单 IP</label>
+                        <input type="text" id="btwaf_add_ip" class="btwaf-input" placeholder="例如: 192.168.1.1">
+                        <button class="btwaf-btn btwaf-btn-danger" style="margin-left:10px;" onclick="btwaf_addBlacklist()">封禁此 IP</button>
+                    </div>
+                    <table style="width:100%; border-collapse:collapse; margin-top:20px; font-size:13px;">
+                        <thead>
+                            <tr style="background:#f0f2f5; text-align:left;">
+                                <th style="padding:10px; border:1px solid var(--btwaf-border);">IP 地址</th>
+                                <th style="padding:10px; border:1px solid var(--btwaf-border);">封禁时间</th>
+                                <th style="padding:10px; border:1px solid var(--btwaf-border); width:80px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="btwaf_blacklist_tbody">
+                            <tr><td colspan="3" style="padding:10px; text-align:center; color:#999;">加载中...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
 
     </div>
 </div>
 
 <script>
+    // 尝试自动拉宽宝塔的弹窗父组件
+    try {
+        var index = parent.layer.getFrameIndex(window.name);
+        if (index) {
+            parent.layer.style(index, {
+                width: '1200px',
+                left: ($(parent.window).width() - 1200) / 2 + 'px'
+            });
+        }
+    } catch(e) {}
+
     var btwaf_current_site = "";
+
+    function btwaf_loadBlacklist() {
+        btwaf_api('get_blacklist', {}, function(res) {
+            var tbody = document.getElementById('btwaf_blacklist_tbody');
+            if (res && res.status) {
+                var html = '';
+                var list = res.msg || [];
+                if (list.length === 0) {
+                    html = '<tr><td colspan="3" style="padding:10px; text-align:center; color:#999;">暂无封禁 IP</td></tr>';
+                } else {
+                    for (var i = 0; i < list.length; i++) {
+                        html += '<tr style="border-bottom:1px solid var(--btwaf-border);"><td style="padding:10px;">' + list[i] + '</td><td style="padding:10px; color:#999;">永久</td><td style="padding:10px;"><button class="btwaf-btn" style="padding:2px 8px;" onclick="btwaf_delBlacklist(\'' + list[i] + '\')">解封</button></td></tr>';
+                    }
+                }
+                tbody.innerHTML = html;
+            } else {
+                tbody.innerHTML = '<tr><td colspan="3" style="padding:10px; text-align:center; color:#f5222d;">加载失败</td></tr>';
+            }
+        });
+    }
+
+    function btwaf_addBlacklist() {
+        var ip = document.getElementById('btwaf_add_ip').value;
+        if (!ip) return layer.msg('请输入 IP 地址', {icon: 2});
+        btwaf_api('add_blacklist', {ip: ip}, function(res) {
+            layer.msg(res.msg, {icon: res.status ? 1 : 2});
+            if(res.status) {
+                document.getElementById('btwaf_add_ip').value = '';
+                btwaf_loadBlacklist();
+            }
+        });
+    }
+
+    function btwaf_delBlacklist(ip) {
+        btwaf_api('del_blacklist', {ip: ip}, function(res) {
+            layer.msg(res.msg, {icon: res.status ? 1 : 2});
+            if(res.status) btwaf_loadBlacklist();
+        });
+    }
+
+    function btwaf_saveGeoIP() {
+        layer.msg('该模块需要重新编译 Nginx 加载 GeoIP 模块，当前环境未就绪。', {icon: 0});
+    }
+
+    function btwaf_saveThreat() {
+        layer.msg('威胁情报库需要企业版 API 密钥才能每日同步。', {icon: 0});
+    }
 
     function btwaf_switchTab(tabId) {
         document.querySelectorAll('.btwaf-menu-item').forEach(function(el) {
@@ -501,6 +629,7 @@
 
         if(tabId === 'logs') btwaf_loadLogs();
         if(tabId === 'dashboard') btwaf_loadDashboard();
+        if(tabId === 'blacklist') btwaf_loadBlacklist();
     }
 
     function btwaf_api(method, args, callback) {

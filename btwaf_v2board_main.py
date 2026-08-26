@@ -155,6 +155,60 @@ class btwaf_v2board_main:
         public.ExecShell("/etc/init.d/nginx reload")
         return public.returnMsg(True, "CC 防御配置已保存并生效")
 
+    def _get_blacklist_file(self):
+        return "/www/server/nginx/conf/waf/rules/blacklist.rule"
+
+    def get_blacklist(self, args):
+        path = self._get_blacklist_file()
+        if not os.path.exists(path):
+            return public.returnMsg(True, [])
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                lines = [line.strip() for line in f if line.strip() and not line.startswith('#')]
+            return public.returnMsg(True, lines)
+        except Exception as e:
+            return public.returnMsg(False, f"读取黑名单失败: {str(e)}")
+
+    def add_blacklist(self, args):
+        ip = getattr(args, 'ip', '').strip()
+        if not ip:
+            return public.returnMsg(False, "IP 不能为空")
+        path = self._get_blacklist_file()
+        try:
+            lines = []
+            if os.path.exists(path):
+                with open(path, 'r', encoding='utf-8') as f:
+                    lines = [line.strip() for line in f if line.strip()]
+            if ip in lines:
+                return public.returnMsg(False, "该 IP 已在黑名单中")
+            lines.append(ip)
+            with open(path, 'w', encoding='utf-8') as f:
+                f.write('\n'.join(lines) + '\n')
+            public.ExecShell("/etc/init.d/nginx reload")
+            return public.returnMsg(True, f"已封禁 IP: {ip}")
+        except Exception as e:
+            return public.returnMsg(False, f"添加失败: {str(e)}")
+
+    def del_blacklist(self, args):
+        ip = getattr(args, 'ip', '').strip()
+        if not ip:
+            return public.returnMsg(False, "IP 不能为空")
+        path = self._get_blacklist_file()
+        try:
+            if not os.path.exists(path):
+                return public.returnMsg(False, "黑名单文件不存在")
+            with open(path, 'r', encoding='utf-8') as f:
+                lines = [line.strip() for line in f if line.strip()]
+            if ip not in lines:
+                return public.returnMsg(False, "该 IP 不在黑名单中")
+            lines.remove(ip)
+            with open(path, 'w', encoding='utf-8') as f:
+                f.write('\n'.join(lines) + '\n')
+            public.ExecShell("/etc/init.d/nginx reload")
+            return public.returnMsg(True, f"已解封 IP: {ip}")
+        except Exception as e:
+            return public.returnMsg(False, f"解封失败: {str(e)}")
+
     def save_framework(self, args):
         framework = getattr(args, 'framework', 'v2board')
         return public.returnMsg(True, f"已保存 {framework} 专属适配")
