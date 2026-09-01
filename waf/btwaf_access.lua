@@ -27,14 +27,15 @@ local req_method = ngx.req.get_method()
 -- 获取真实客户端 IP (兼容开启小云朵 Cloudflare 或 CDN 代理的情况)
 local function get_client_ip()
     local headers = ngx.req.get_headers()
-    local ip = headers["CF-Connecting-IP"] 
-            or headers["X-Forwarded-For"] 
+    -- 必须优先取 X-Forwarded-For，因为如果是 CF Worker 反代，CF-Connecting-IP 会变成 Worker 节点的 IP
+    local ip = headers["X-Forwarded-For"] 
+            or headers["CF-Connecting-IP"] 
             or headers["X-Real-IP"] 
             or ngx.var.remote_addr
     
-    -- X-Forwarded-For 可能是个列表，取第一个真实的
+    -- 如果是列表，取逗号前的第一个真实 IP（兼容 IPv4 和 IPv6）
     if ip and string.find(ip, ",") then
-        local first_ip = string.match(ip, "^%s*(%d+%.%d+%.%d+%.%d+)")
+        local first_ip = string.match(ip, "^%s*([^,]+)")
         if first_ip then ip = first_ip end
     end
     return ip
