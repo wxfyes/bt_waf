@@ -142,17 +142,17 @@ if _G.waf_rules.blacklist then
     end
 end
 
+-- ================= 全局服务通信白名单 ================= --
+-- V2Board/Xboard/各种探针 专属放行逻辑（API 订阅与服务端节点通信免死金牌）
+-- 必须在扫描器 UA 和空 UA 检测之前，因为 Telegram Webhook 没有 UA，节点和订阅也常被误杀
+if string.find(req_uri, "/api/v1/client/") or string.find(req_uri, "/api/v1/server/") or string.find(req_uri, "/api/clients/") or string.find(req_uri, "/api/v1/guest/") or string.find(req_uri, "/ktelie/") or string.find(req_uri, "webhook") then
+    return
+end
+
 -- 0.5 空 User-Agent 斩杀 (绝杀极简探测器与 GFW 主动嗅探)
 local ua = ngx.var.http_user_agent
 if not ua or ua == "" then
     trigger_penalty("Empty User-Agent", "null")
-    return
-end
-
--- ================= 全局服务通信白名单 ================= --
--- V2Board/Xboard/各种探针 专属放行逻辑（API 订阅与服务端节点通信免死金牌）
--- 必须在扫描器 UA 检测之前，因为节点和订阅客户端经常使用 go-http-client 或 Clash/Surge 等易被误杀的 UA
-if string.find(req_uri, "/api/v1/client/") or string.find(req_uri, "/api/v1/server/") or string.find(req_uri, "/api/clients/") or string.find(req_uri, "/api/v1/guest/") or string.find(req_uri, "/ktelie/") or string.find(req_uri, "webhook") then
     return
 end
 
