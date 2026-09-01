@@ -170,7 +170,13 @@ if config.cc_enable == "on" then
     if cc_dict then
         local req_count, err = cc_dict:get(client_ip)
         if req_count then
-            if req_count > (tonumber(config.cc_rate) or 30) then
+            -- 动态阈值：如果是 V2Board 的用户业务路径（除了敏感的登录注册），阈值自动放宽 3 倍，完美兼容客户端高频并发
+            local limit = tonumber(config.cc_rate) or 30
+            if site_framework == "v2board" and string.find(req_uri, "/api/v1/user/") then
+                limit = limit * 3
+            end
+            
+            if req_count > limit then
                 trigger_penalty("CC Attack", "High Frequency")
                 return
             else
