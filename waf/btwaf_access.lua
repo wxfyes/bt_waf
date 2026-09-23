@@ -131,6 +131,24 @@ local site_framework = ngx.var.btwaf_framework or config.framework or "general"
 local req_uri = ngx.var.request_uri
 
 
+-- ================= 白名单优先放行逻辑 ================= --
+-- 0.0 IP 白名单检测
+if _G.waf_rules.whitelist_ip then
+    local rules = _G.waf_rules.whitelist_ip
+    for _, rule in ipairs(rules) do
+        if client_ip == rule then
+            return -- 白名单 IP 直接放行
+        end
+    end
+end
+
+-- 0.1 路径白名单检测
+if _G.waf_rules.whitelist_path then
+    local match, payload = match_rules(req_uri, "whitelist_path")
+    if match then
+        return -- 白名单路径直接放行
+    end
+end
 
 -- 0. IP 黑名单检测
 if _G.waf_rules.blacklist then
@@ -144,9 +162,9 @@ if _G.waf_rules.blacklist then
 end
 
 -- ================= 全局服务通信白名单 ================= --
--- V2Board/Xboard/各种探针 专属放行逻辑（API 订阅与服务端节点通信免死金牌）
+-- V2Board/Xboard/各种探针/StealthForward 专属放行逻辑（API 订阅与服务端节点通信免死金牌）
 -- 必须在扫描器 UA 和空 UA 检测之前，因为 Telegram Webhook 没有 UA，节点和订阅也常被误杀
-if string.find(req_uri, "/api/v1/client/") or string.find(req_uri, "/api/v1/server/") or string.find(req_uri, "/api/clients/") or string.find(req_uri, "/api/v1/guest/") or string.find(req_uri, "/ktelie/") or string.find(req_uri, "webhook") then
+if string.find(req_uri, "/api/v1/client/") or string.find(req_uri, "/api/v1/server/") or string.find(req_uri, "/api/clients/") or string.find(req_uri, "/api/v1/guest/") or string.find(req_uri, "/ktelie/") or string.find(req_uri, "webhook") or string.find(req_uri, "/api/v1/node/") or string.find(req_uri, "/api/v1/entries/") then
     return
 end
 

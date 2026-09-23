@@ -282,6 +282,114 @@ class btwaf_v2board_main:
         except Exception as e:
             return public.returnMsg(False, f"解封失败: {str(e)}")
 
+    def _get_whitelist_ip_file(self):
+        return "/www/server/nginx/conf/waf/rules/whitelist_ip.rule"
+
+    def get_whitelist_ip(self, args):
+        path = self._get_whitelist_ip_file()
+        if not os.path.exists(path):
+            return public.returnMsg(True, [])
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                lines = [line.strip() for line in f if line.strip() and not line.startswith('#')]
+            return public.returnMsg(True, lines)
+        except Exception as e:
+            return public.returnMsg(False, f"获取白名单IP失败: {str(e)}")
+
+    def add_whitelist_ip(self, args):
+        ip = getattr(args, 'ip', '').strip()
+        if not ip:
+            return public.returnMsg(False, "IP 不能为空")
+        path = self._get_whitelist_ip_file()
+        try:
+            lines = []
+            if os.path.exists(path):
+                with open(path, 'r', encoding='utf-8') as f:
+                    lines = [line.strip() for line in f if line.strip()]
+            if ip in lines:
+                return public.returnMsg(False, "该 IP 已在白名单中")
+            lines.append(ip)
+            with open(path, 'w', encoding='utf-8') as f:
+                f.write('\n'.join(lines) + '\n')
+            public.ExecShell("/etc/init.d/nginx reload")
+            return public.returnMsg(True, f"已添加白名单 IP: {ip}")
+        except Exception as e:
+            return public.returnMsg(False, f"添加失败: {str(e)}")
+
+    def del_whitelist_ip(self, args):
+        ip = getattr(args, 'ip', '').strip()
+        if not ip:
+            return public.returnMsg(False, "IP 不能为空")
+        path = self._get_whitelist_ip_file()
+        try:
+            if not os.path.exists(path):
+                return public.returnMsg(False, "规则文件不存在")
+            with open(path, 'r', encoding='utf-8') as f:
+                lines = [line.strip() for line in f if line.strip()]
+            if ip not in lines:
+                return public.returnMsg(False, "该 IP 不在白名单中")
+            lines.remove(ip)
+            with open(path, 'w', encoding='utf-8') as f:
+                f.write('\n'.join(lines) + '\n')
+            public.ExecShell("/etc/init.d/nginx reload")
+            return public.returnMsg(True, f"已移除白名单 IP: {ip}")
+        except Exception as e:
+            return public.returnMsg(False, f"移除失败: {str(e)}")
+
+    def _get_whitelist_path_file(self):
+        return "/www/server/nginx/conf/waf/rules/whitelist_path.rule"
+
+    def get_whitelist_path(self, args):
+        path = self._get_whitelist_path_file()
+        if not os.path.exists(path):
+            return public.returnMsg(True, [])
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                lines = [line.strip() for line in f if line.strip() and not line.startswith('#')]
+            return public.returnMsg(True, lines)
+        except Exception as e:
+            return public.returnMsg(False, f"获取白名单路径失败: {str(e)}")
+
+    def add_whitelist_path(self, args):
+        path_rule = getattr(args, 'path', '').strip()
+        if not path_rule:
+            return public.returnMsg(False, "路径规则不能为空")
+        path = self._get_whitelist_path_file()
+        try:
+            lines = []
+            if os.path.exists(path):
+                with open(path, 'r', encoding='utf-8') as f:
+                    lines = [line.strip() for line in f if line.strip()]
+            if path_rule in lines:
+                return public.returnMsg(False, "该路径规则已存在")
+            lines.append(path_rule)
+            with open(path, 'w', encoding='utf-8') as f:
+                f.write('\n'.join(lines) + '\n')
+            public.ExecShell("/etc/init.d/nginx reload")
+            return public.returnMsg(True, f"已添加白名单路径: {path_rule}")
+        except Exception as e:
+            return public.returnMsg(False, f"添加失败: {str(e)}")
+
+    def del_whitelist_path(self, args):
+        path_rule = getattr(args, 'path', '').strip()
+        if not path_rule:
+            return public.returnMsg(False, "路径规则不能为空")
+        path = self._get_whitelist_path_file()
+        try:
+            if not os.path.exists(path):
+                return public.returnMsg(False, "规则文件不存在")
+            with open(path, 'r', encoding='utf-8') as f:
+                lines = [line.strip() for line in f if line.strip()]
+            if path_rule not in lines:
+                return public.returnMsg(False, "该路径规则不在白名单中")
+            lines.remove(path_rule)
+            with open(path, 'w', encoding='utf-8') as f:
+                f.write('\n'.join(lines) + '\n')
+            public.ExecShell("/etc/init.d/nginx reload")
+            return public.returnMsg(True, f"已移除白名单路径: {path_rule}")
+        except Exception as e:
+            return public.returnMsg(False, f"移除失败: {str(e)}")
+
     def save_framework(self, args):
         framework = getattr(args, 'framework', 'v2board')
         return public.returnMsg(True, f"已保存 {framework} 专属适配")
@@ -560,6 +668,30 @@ class btwaf_v2board_main:
             
             insert_parts = ["\n    # BTWAF_GLOBAL_START"]
             insert_parts.append("    lua_shared_dict btwaf_ip_scores 10m;")
+            insert_parts.append("    set_real_ip_from 103.21.244.0/22;")
+            insert_parts.append("    set_real_ip_from 103.22.200.0/22;")
+            insert_parts.append("    set_real_ip_from 103.31.4.0/22;")
+            insert_parts.append("    set_real_ip_from 104.16.0.0/13;")
+            insert_parts.append("    set_real_ip_from 104.24.0.0/14;")
+            insert_parts.append("    set_real_ip_from 108.162.192.0/18;")
+            insert_parts.append("    set_real_ip_from 131.0.72.0/22;")
+            insert_parts.append("    set_real_ip_from 141.101.64.0/18;")
+            insert_parts.append("    set_real_ip_from 162.158.0.0/15;")
+            insert_parts.append("    set_real_ip_from 172.64.0.0/13;")
+            insert_parts.append("    set_real_ip_from 173.245.48.0/20;")
+            insert_parts.append("    set_real_ip_from 188.114.96.0/20;")
+            insert_parts.append("    set_real_ip_from 190.93.240.0/20;")
+            insert_parts.append("    set_real_ip_from 197.234.240.0/22;")
+            insert_parts.append("    set_real_ip_from 198.41.128.0/17;")
+            insert_parts.append("    set_real_ip_from 2400:cb00::/32;")
+            insert_parts.append("    set_real_ip_from 2606:4700::/32;")
+            insert_parts.append("    set_real_ip_from 2803:f800::/32;")
+            insert_parts.append("    set_real_ip_from 2405:b500::/32;")
+            insert_parts.append("    set_real_ip_from 2405:8100::/32;")
+            insert_parts.append("    set_real_ip_from 2a06:98c0::/29;")
+            insert_parts.append("    set_real_ip_from 2c0f:f248::/32;")
+            insert_parts.append("    real_ip_header CF-Connecting-IP;")
+            insert_parts.append("    real_ip_recursive on;")
             insert_parts.append("    # BTWAF_GLOBAL_END\n")
             
             insert_global = "\n".join(insert_parts)

@@ -59,7 +59,9 @@ _G.waf_rules = {
     cookie = load_rules("cookie.rule"),
     user_agent = load_rules("user_agent.rule"),
     v2board = load_rules("v2board.rule"), -- 专属适配规则
-    blacklist = load_rules("blacklist.rule") -- IP 黑名单
+    blacklist = load_rules("blacklist.rule"), -- IP 黑名单
+    whitelist_ip = load_rules("whitelist_ip.rule"), -- IP 白名单
+    whitelist_path = load_rules("whitelist_path.rule") -- 路径白名单
 }
 _G.waf_config = config
 
